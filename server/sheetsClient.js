@@ -12,9 +12,10 @@ const SHEET_SCHEMAS = {
   ],
   Interaction_Events: [
     'event_id', 'task_trial_id', 'participant_id', 'task_id', 'event_order',
-    'timestamp', 'from_screen_id', 'screen_id', 'action_type', 'target_id',
-    'target_label', 'next_screen_id',
+    'timestamp', 'from_screen_id', 'screen_id', 'screen_type', 'action_type', 'target_id',
+    'target_label', 'next_screen_id', 'active_popup_id',
     'click_x', 'click_y', 'click_x_pct', 'click_y_pct', 'viewport_width', 'viewport_height',
+    'device_context',
   ],
 };
 

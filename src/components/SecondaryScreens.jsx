@@ -63,12 +63,19 @@ export function ContactInfo({
   const currentScreen = SCREENS.CONTACT_INFO;
   const isGroup = !!contact.isGroup;
 
-  const logTap = (target_id, label) => onLog({ screen_id: currentScreen, action_type:'tap', target_id, target_label:label });
+  const logTap = (target_id, label, nextScreen) => onLog({
+    screen_id: currentScreen,
+    action_type: 'tap',
+    target_id,
+    target_label: label,
+    next_screen_id: nextScreen,
+    active_popup_id: currentScreen,
+  });
 
   return (
     <div style={{ width:'min(400px, 100%)', flex:'0 0 auto', flexShrink:1, background:'#ffffff', borderLeft:'1px solid #e9edef', display:'flex', flexDirection:'column', height:'100%', overflow:'hidden', zIndex:40 }}>
       <div style={{ padding:'14px 20px', display:'flex', alignItems:'center', gap:22, borderBottom:'1px solid #e9edef', flexShrink:0 }}>
-        <button onClick={() => { logTap(TARGETS.CONTACT_PANEL_CLOSE, isGroup ? 'close group info' : 'close contact info'); onClose(); }}
+        <button onClick={() => { logTap(TARGETS.CONTACT_PANEL_CLOSE, isGroup ? 'close group info' : 'close contact info', SCREENS.CHAT_VIEW); onClose(); }}
           style={{ background:'none', border:'none', color:'#54656f', cursor:'pointer', fontSize:20, lineHeight:1 }}>×</button>
         <span style={{ color:'#111b21', fontSize:16, fontWeight:500 }}>{isGroup ? 'Group info' : 'Contact info'}</span>
       </div>
@@ -79,7 +86,7 @@ export function ContactInfo({
           <div style={{ color:'#111b21', fontSize:20, fontWeight:400 }}>{contact.name}</div>
           <div style={{ color:'#667781', fontSize:14, marginTop:4 }}>{contact.phone}</div>
 
-          <button onClick={() => { logTap(TARGETS.CONTACT_SEARCH, 'search in chat'); onOpenChatSearch && onOpenChatSearch(); }}
+          <button onClick={() => { logTap(TARGETS.CONTACT_SEARCH, 'search in chat', SCREENS.CHAT_SEARCH); onOpenChatSearch && onOpenChatSearch(); }}
             title="Search"
             style={{ marginTop:20, width:52, height:52, borderRadius:'50%', border:'none', background:'#f0f2f5', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
             onMouseEnter={e => e.currentTarget.style.background='#e9edef'}
@@ -190,6 +197,8 @@ export function ChatSearchPanel({ chat, onClose, onLog, onSelectMessage }) {
   const contact = getChatContact(chat);
   if (!contact) return null;
 
+  const currentScreen = SCREENS.CHAT_SEARCH;
+
   const matches = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -208,12 +217,12 @@ export function ChatSearchPanel({ chat, onClose, onLog, onSelectMessage }) {
   }, [matches]);
 
   const handleClose = () => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.BACK_BUTTON, target_label: 'close chat search' });
+    onLog({ screen_id: currentScreen, action_type: 'tap', target_id: TARGETS.BACK_BUTTON, target_label: 'close chat search', next_screen_id: SCREENS.CHAT_VIEW, active_popup_id: currentScreen });
     onClose && onClose();
   };
 
   const handleResultClick = (msg) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: `${TARGETS.SEARCH_RESULT}_${msg.id}`, target_label: msg.text.slice(0, 30) });
+    onLog({ screen_id: currentScreen, action_type: 'tap', target_id: `${TARGETS.SEARCH_RESULT}_${msg.id}`, target_label: msg.text.slice(0, 30), next_screen_id: SCREENS.CHAT_VIEW, active_popup_id: currentScreen });
     onSelectMessage && onSelectMessage(msg.id);
   };
 
@@ -244,7 +253,7 @@ export function ChatSearchPanel({ chat, onClose, onLog, onSelectMessage }) {
             value={query}
             onChange={e => {
               setQuery(e.target.value);
-              onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'text_input', target_id: TARGETS.SEARCH_INPUT, target_label: 'chat search field' });
+              onLog({ screen_id: currentScreen, action_type: 'text_input', target_id: TARGETS.SEARCH_INPUT, target_label: 'chat search field', active_popup_id: currentScreen });
             }}
             placeholder={`Search in chat with ${contact.name}`}
             style={{ flex:1, minWidth:0, background:'none', border:'none', outline:'none', color:'#111b21', fontSize:14, fontFamily:'inherit' }}

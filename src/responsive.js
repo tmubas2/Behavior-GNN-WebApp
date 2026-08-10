@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+export const MOBILE_BREAKPOINT = 880;
 
 export function useAppHeight() {
   useEffect(() => {
@@ -19,7 +20,7 @@ export function useAppHeight() {
   }, []);
 }
 
-export function useIsMobile(breakpoint = 880) {
+export function useIsMobile(breakpoint = MOBILE_BREAKPOINT) {
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== 'undefined' && window.innerWidth < breakpoint
   );

@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { getScreenType } from './data';
+import { MOBILE_BREAKPOINT } from './responsive';
 
 let eventCounter = 0;
 const genId = (prefix) => `${prefix}_${Date.now()}_${++eventCounter}`;
@@ -114,16 +116,19 @@ export function useLogger(participant) {
       timestamp:       new Date().toISOString(),
       from_screen_id:  lastScreenRef.current || screenId,
       screen_id:       screenId,
+      screen_type:     getScreenType(screenId),
       action_type:     params.action_type  || '',
       target_id:       params.target_id    || '',
       target_label:    params.target_label || '',
       next_screen_id:  params.next_screen_id || '',
+      active_popup_id: params.active_popup_id || '',
       click_x:         x != null ? x : '',
       click_y:         y != null ? y : '',
       click_x_pct:     x != null && vw ? Number((x / vw).toFixed(4)) : '',
       click_y_pct:     y != null && vh ? Number((y / vh).toFixed(4)) : '',
       viewport_width:  vw,
       viewport_height: vh,
+      device_context:  vw < MOBILE_BREAKPOINT ? 'mobile' : 'desktop',
     };
     if (params.next_screen_id) {
       lastScreenRef.current = params.next_screen_id;
@@ -267,16 +272,19 @@ export function useLogger(participant) {
       timestamp:       e.timestamp,
       from_screen_id:  e.from_screen_id,
       screen_id:       e.screen_id,
+      screen_type:     e.screen_type,
       action_type:     e.action_type,
       target_id:       e.target_id,
       target_label:    e.target_label,
       next_screen_id:  e.next_screen_id,
+      active_popup_id: e.active_popup_id,
       click_x:         e.click_x,
       click_y:         e.click_y,
       click_x_pct:     e.click_x_pct,
       click_y_pct:     e.click_y_pct,
       viewport_width:  e.viewport_width,
       viewport_height: e.viewport_height,
+      device_context:  e.device_context,
     })));
     XLSX.utils.book_append_sheet(wb, wsIE, 'Interaction_Events');
 
@@ -339,16 +347,19 @@ export function useLogger(participant) {
         timestamp:       e.timestamp,
         from_screen_id:  e.from_screen_id,
         screen_id:       e.screen_id,
+        screen_type:     e.screen_type,
         action_type:     e.action_type,
         target_id:       e.target_id,
         target_label:    e.target_label,
         next_screen_id:  e.next_screen_id,
+        active_popup_id: e.active_popup_id,
         click_x:         e.click_x,
         click_y:         e.click_y,
         click_x_pct:     e.click_x_pct,
         click_y_pct:     e.click_y_pct,
         viewport_width:  e.viewport_width,
         viewport_height: e.viewport_height,
+        device_context:  e.device_context,
       })),
     };
 

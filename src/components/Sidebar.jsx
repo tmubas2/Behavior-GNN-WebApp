@@ -130,7 +130,7 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
 export default function Sidebar({
   currentScreen, activeChat, onSelectChat, onNavigate, onLog,
   searchQuery, setSearchQuery, chats, onLogout, onCreateGroup,
-  favoriteContacts, isMobile = false,
+  favoriteContacts, isMobile = false, activeAdaptivePopupId,
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuAnchorRef = useRef(null);
@@ -172,13 +172,17 @@ export default function Sidebar({
     return true;
   });
 
+  const getActivePopupId = () => showMenu ? SCREENS.SIDEBAR_MENU : (activeAdaptivePopupId || null);
+
+  const logWithPopupContext = (params) => onLog({ ...params, active_popup_id: getActivePopupId() });
+
   const handleSearchClick = () => {
-    onLog({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_SEARCH_ICON, target_label: 'search icon', next_screen_id: SCREENS.SEARCH });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_SEARCH_ICON, target_label: 'search icon', next_screen_id: SCREENS.SEARCH });
     onNavigate(SCREENS.SEARCH);
   };
 
   const handleNewChatClick = () => {
-    onLog({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_NEW_CHAT, target_label: 'new chat', next_screen_id: SCREENS.NEW_CHAT });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_NEW_CHAT, target_label: 'new chat', next_screen_id: SCREENS.NEW_CHAT });
     onNavigate(SCREENS.NEW_CHAT);
   };
 
@@ -193,7 +197,7 @@ export default function Sidebar({
     }
     setReadChats(prev => new Set([...prev, chat.id]));
     const label = getChatContact(chat).name;
-    onLog({
+    logWithPopupContext({
       screen_id: currentScreen,
       action_type: 'tap',
       target_id: isSearch ? `${TARGETS.SEARCH_RESULT}_${chat.id}` : `${TARGETS.CHAT_ITEM}_${chat.id}`,
@@ -205,14 +209,14 @@ export default function Sidebar({
   };
 
   const handleContactSelect = (contact) => {
-    onLog({ screen_id: SCREENS.NEW_CHAT, action_type: 'tap', target_id: `${TARGETS.NEW_CHAT_CONTACT}_${contact.id}`, target_label: contact.name, next_screen_id: SCREENS.CHAT_VIEW });
+    logWithPopupContext({ screen_id: SCREENS.NEW_CHAT, action_type: 'tap', target_id: `${TARGETS.NEW_CHAT_CONTACT}_${contact.id}`, target_label: contact.name, next_screen_id: SCREENS.CHAT_VIEW });
     const existingChat = liveChats.find(c => c.contactId === contact.id);
     if (existingChat) setReadChats(prev => new Set([...prev, existingChat.id]));
     onSelectChat(existingChat || { id: `CH_NEW_${contact.id}`, contactId: contact.id, messages: [] }, true);
   };
 
   const toggleGroupMember = (contactId) => {
-    onLog({ screen_id: SCREENS.NEW_GROUP, action_type: 'tap', target_id: TARGETS.NEW_GROUP_CONTACT, target_label: CONTACTS.find(c => c.id === contactId)?.name });
+    logWithPopupContext({ screen_id: SCREENS.NEW_GROUP, action_type: 'tap', target_id: TARGETS.NEW_GROUP_CONTACT, target_label: CONTACTS.find(c => c.id === contactId)?.name });
     setGroupSelected(prev => {
       const next = new Set(prev);
       if (next.has(contactId)) next.delete(contactId); else next.add(contactId);
@@ -221,7 +225,7 @@ export default function Sidebar({
   };
 
   const handleGroupNext = () => {
-    onLog({ screen_id: SCREENS.NEW_GROUP, action_type: 'tap', target_id: TARGETS.NEW_GROUP_NEXT, target_label: 'next' });
+    logWithPopupContext({ screen_id: SCREENS.NEW_GROUP, action_type: 'tap', target_id: TARGETS.NEW_GROUP_NEXT, target_label: 'next' });
     setGroupStep('details');
     setSearchQuery('');
   };
@@ -230,7 +234,7 @@ export default function Sidebar({
     const memberIds = [...groupSelected];
     const defaultName = CONTACTS.filter(c => memberIds.includes(c.id)).map(c => c.name.split(' ')[0]).slice(0, 3).join(', ') || 'New Group';
     const name = groupName.trim() || defaultName;
-    onLog({ screen_id: SCREENS.NEW_GROUP, action_type: 'tap', target_id: TARGETS.NEW_GROUP_CREATE, target_label: name });
+    logWithPopupContext({ screen_id: SCREENS.NEW_GROUP, action_type: 'tap', target_id: TARGETS.NEW_GROUP_CREATE, target_label: name });
     const newGroup = onCreateGroup && onCreateGroup(memberIds, name);
     setGroupSelected(new Set());
     setGroupName('');
@@ -241,9 +245,25 @@ export default function Sidebar({
     }
   };
 
+  const menuOpenedFromScreenRef = useRef(currentScreen);
+
   const toggleSidebarMenu = () => {
-    onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: TARGETS.NAV_MENU, target_label:'menu' });
-    if (!showMenu) {
+    const opening = !showMenu;
+    const returnScreen = menuOpenedFromScreenRef.current || currentScreen;
+
+    if (opening) {
+      menuOpenedFromScreenRef.current = currentScreen;
+    }
+
+    logWithPopupContext({
+      screen_id:      opening ? currentScreen : SCREENS.SIDEBAR_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.NAV_MENU,
+      target_label:   'menu',
+      next_screen_id: opening ? SCREENS.SIDEBAR_MENU : returnScreen,
+    });
+
+    if (opening) {
       const rect = menuAnchorRef.current?.getBoundingClientRect();
       if (rect) {
         const margin = 12;
@@ -259,16 +279,16 @@ export default function Sidebar({
   const unreadCount = liveChats.filter(c => isUnread(c)).length;
 
   const sidebarMenuItems = [
-    { label:'New group', id: TARGETS.SIDEBAR_MENU_NEW_GROUP, action: () => {
+    { label:'New group', id: TARGETS.SIDEBAR_MENU_NEW_GROUP, nextScreen: SCREENS.NEW_GROUP, action: () => {
         setGroupStep('select'); setGroupSelected(new Set()); setGroupName(''); setSearchQuery('');
         onNavigate(SCREENS.NEW_GROUP);
       } },
-    { label:'Archived', id: TARGETS.SIDEBAR_MENU_ARCHIVED, action: () => setViewingArchived(true) },
-    { label:'Starred messages', id: TARGETS.NAV_STARRED, action: () => onNavigate(SCREENS.STARRED) },
-    { label:'Select chats', id: TARGETS.SIDEBAR_MENU_SELECT_CHATS, action: () => { setSelectMode(v => !v); setSelectedChats(new Set()); } },
-    { label:'Mark all as read', id: TARGETS.SIDEBAR_MENU_MARK_ALL_READ, action: () => setReadChats(new Set(liveChats.map(c => c.id))) },
-    { label:'App lock', id: TARGETS.SIDEBAR_MENU_APP_LOCK, action: () => onNavigate(SCREENS.SETTINGS) },
-    { label:'Log out', id: TARGETS.SIDEBAR_MENU_LOGOUT, danger:true,
+    { label:'Archived', id: TARGETS.SIDEBAR_MENU_ARCHIVED, nextScreen: SCREENS.CHAT_LIST, action: () => setViewingArchived(true) },
+    { label:'Starred messages', id: TARGETS.NAV_STARRED, nextScreen: SCREENS.STARRED, action: () => onNavigate(SCREENS.STARRED) },
+    { label:'Select chats', id: TARGETS.SIDEBAR_MENU_SELECT_CHATS, nextScreen: SCREENS.CHAT_LIST, action: () => { setSelectMode(v => !v); setSelectedChats(new Set()); } },
+    { label:'Mark all as read', id: TARGETS.SIDEBAR_MENU_MARK_ALL_READ, nextScreen: SCREENS.CHAT_LIST, action: () => setReadChats(new Set(liveChats.map(c => c.id))) },
+    { label:'App lock', id: TARGETS.SIDEBAR_MENU_APP_LOCK, nextScreen: SCREENS.SETTINGS, action: () => onNavigate(SCREENS.SETTINGS) },
+    { label:'Log out', id: TARGETS.SIDEBAR_MENU_LOGOUT, danger:true, nextScreen: SCREENS.PARTICIPANT_SETUP,
       action: () => { if (window.confirm('Log out of this research session?')) onLogout && onLogout(); } },
   ];
 
@@ -332,7 +352,13 @@ export default function Sidebar({
                         <div key={item.label}
                           onClick={() => {
                             setShowMenu(false);
-                            onLog({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: item.id, target_label: item.label });
+                            logWithPopupContext({
+                              screen_id: SCREENS.SIDEBAR_MENU,
+                              action_type: 'tap',
+                              target_id: item.id,
+                              target_label: item.label,
+                              next_screen_id: item.nextScreen || currentScreen,
+                            });
                             item.action();
                           }}
                           style={{ padding:'11px 20px', color: item.danger ? '#ea0038' : '#111b21', fontSize:14, cursor:'pointer' }}
@@ -357,7 +383,7 @@ export default function Sidebar({
                 value={searchQuery}
                 onChange={e => {
                   setSearchQuery(e.target.value);
-                  onLog({ screen_id: currentScreen, action_type: 'text_input', target_id: TARGETS.SEARCH_INPUT, target_label: 'search field' });
+                  logWithPopupContext({ screen_id: currentScreen, action_type: 'text_input', target_id: TARGETS.SEARCH_INPUT, target_label: 'search field' });
                 }}
                 onFocus={() => {
                   if (currentScreen !== SCREENS.SEARCH && currentScreen !== SCREENS.NEW_CHAT && currentScreen !== SCREENS.NEW_GROUP) handleSearchClick();
@@ -483,7 +509,7 @@ export default function Sidebar({
                 value={groupName}
                 onChange={e => {
                   setGroupName(e.target.value);
-                  onLog({ screen_id: SCREENS.NEW_GROUP, action_type:'text_input', target_id: TARGETS.NEW_GROUP_NAME_INPUT, target_label:'group name' });
+                  logWithPopupContext({ screen_id: SCREENS.NEW_GROUP, action_type:'text_input', target_id: TARGETS.NEW_GROUP_NAME_INPUT, target_label:'group name' });
                 }}
                 placeholder="Group name (optional)"
                 style={{ flex:1, border:'none', borderBottom:'1px solid #d1d7db', outline:'none', fontSize:16, padding:'8px 4px', fontFamily:'inherit', color:'#111b21' }}

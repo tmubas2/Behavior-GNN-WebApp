@@ -80,11 +80,15 @@ export default function App() {
     });
   };
 
-  const handleTaskComplete = (success) => {
-    const trial = endTrial(success, false);
+  const handleTaskComplete = (success, notes = '') => {
+    const trial = endTrial(success, false, notes);
     setLastTrial(trial);
     setLastSuccess(success);
     setTaskPhase('complete');
+  };
+
+  const handleTaskAutoFail = () => {
+    handleTaskComplete(false, 'Auto-failed: participant pressed Done incorrectly twice');
   };
 
   useEffect(() => {
@@ -266,6 +270,12 @@ export default function App() {
   const liveActiveChat = activeChat ? chats.find(c => c.id === activeChat.id) || activeChat : null;
   const activeFavKey = getChatFavKey(liveActiveChat);
 
+  const adaptivePanelId = contactPanelOpen
+    ? SCREENS.CONTACT_INFO
+    : chatSearchOpen
+    ? SCREENS.CHAT_SEARCH
+    : null;
+
   const mobilePane = contactPanelOpen
     ? 'contact'
     : chatSearchOpen
@@ -293,6 +303,7 @@ export default function App() {
     onLogout: handleRestart,
     onCreateGroup: handleCreateGroup,
     favoriteContacts,
+    activeAdaptivePopupId: adaptivePanelId,
   };
 
   const chatViewProps = {
@@ -316,6 +327,7 @@ export default function App() {
     onDeleteChat: handleDeleteChat,
     highlightMessageId,
     onOpenChatSearch: handleOpenChatSearch,
+    activeAdaptivePopupId: adaptivePanelId,
   };
 
   const contactInfoProps = {
@@ -340,6 +352,7 @@ export default function App() {
         active={taskPhase === 'active'}
         onLog={logEvent}
         onHeightChange={setTaskBarHeight}
+        onMaxAttemptsReached={handleTaskAutoFail}
       />
       {taskPhase === 'briefing' && (
         <TaskBriefing task={currentTask} taskIndex={taskIndex} totalTasks={tasks.length} onStart={handleTaskStart} />

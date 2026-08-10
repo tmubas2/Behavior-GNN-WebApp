@@ -26,6 +26,7 @@ export default function ChatView({
   onClearChat, onDeleteChat,
   highlightMessageId,
   onOpenChatSearch,
+  activeAdaptivePopupId,
 }) {
   const [input, setInput] = useState('');
   const [replyTo, setReplyTo] = useState(null);
@@ -46,15 +47,25 @@ export default function ChatView({
 
   const contact = getChatContact(chat);
 
+  const getActivePopupId = () => {
+    if (showMsgMenu) return SCREENS.MSG_ACTION_MENU;
+    if (showForward) return SCREENS.FORWARD_MODAL;
+    if (showAttachMenu) return SCREENS.ATTACH_MENU;
+    if (showMoreMenu) return SCREENS.CHAT_MORE_MENU;
+    return activeAdaptivePopupId || null;
+  };
+
+  const logWithPopupContext = (params) => onLog({ ...params, active_popup_id: getActivePopupId() });
+
   const handleOpenChatSearch = () => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.CHAT_MENU_SEARCH, target_label: 'search in chat' });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.CHAT_MENU_SEARCH, target_label: 'search in chat', next_screen_id: SCREENS.CHAT_SEARCH });
     onOpenChatSearch && onOpenChatSearch();
   };
 
   useEffect(() => {
     setMessages(chat.messages);
     messagesEndRef.current?.scrollIntoView({ behavior:'smooth' });
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'screen_start', target_id: `TGT_CHAT_${chat.id}`, target_label: contact.name });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'screen_start', target_id: `TGT_CHAT_${chat.id}`, target_label: contact.name });
     updateTaskState && updateTaskState('viewedChats', chat.id);
   }, [chat.id]);
 
@@ -80,69 +91,154 @@ export default function ChatView({
     if (!input.trim()) return;
     const newMsg = { id: `MSG_${Date.now()}`, from:'me', text:input, time:Date.now(), replyTo: replyTo?.id, starred:false };
     setMessages(prev => [...prev, newMsg]);
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.SEND_BTN, target_label: 'send button' });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.SEND_BTN, target_label: 'send button' });
     onSend && onSend({ chatId: chat.id, message: newMsg });
     updateTaskState && updateTaskState('sentMessages', { chatId: chat.id, msg: newMsg });
     setInput('');
     setReplyTo(null);
   };
 
-  const handleReply = (msg) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.MSG_REPLY, target_label: 'reply to message' });
+
+  const handleReply = (msg, fromMenu = false) => {
+    logWithPopupContext({
+      screen_id:      fromMenu ? SCREENS.MSG_ACTION_MENU : SCREENS.CHAT_VIEW,
+      action_type:    'tap',
+      target_id:      TARGETS.MSG_REPLY,
+      target_label:   'reply to message',
+      next_screen_id: fromMenu ? SCREENS.CHAT_VIEW : undefined,
+    });
     setReplyTo(msg);
     setShowMsgMenu(null);
     inputRef.current?.focus();
   };
 
   const handleForwardInit = (msg) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.MSG_FORWARD, target_label: 'forward message' });
+    logWithPopupContext({
+      screen_id:      SCREENS.MSG_ACTION_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.MSG_FORWARD,
+      target_label:   'forward message',
+      next_screen_id: SCREENS.FORWARD_MODAL,
+    });
     setShowForward(msg);
     setShowMsgMenu(null);
   };
 
+  const handleForwardCancel = () => {
+    logWithPopupContext({
+      screen_id:      SCREENS.FORWARD_MODAL,
+      action_type:    'tap',
+      target_id:      TARGETS.FORWARD_CANCEL,
+      target_label:   'cancel forward',
+      next_screen_id: SCREENS.CHAT_VIEW,
+    });
+    setShowForward(null);
+  };
+
   const handleForwardSend = (targetContact) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: `${TARGETS.FORWARD_CONTACT}_${targetContact.id}`, target_label: targetContact.name });
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.FORWARD_SEND, target_label: 'send forwarded message' });
+    logWithPopupContext({ screen_id: SCREENS.FORWARD_MODAL, action_type: 'tap', target_id: `${TARGETS.FORWARD_CONTACT}_${targetContact.id}`, target_label: targetContact.name });
+    logWithPopupContext({ screen_id: SCREENS.FORWARD_MODAL, action_type: 'tap', target_id: TARGETS.FORWARD_SEND, target_label: 'send forwarded message', next_screen_id: SCREENS.CHAT_VIEW });
     onForward && onForward({ message: showForward, toContact: targetContact });
     updateTaskState && updateTaskState('forwardedMessages', { msg: showForward, to: targetContact.id });
     setShowForward(null);
   };
 
   const handleStar = (msg) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.MSG_STAR, target_label: 'star message' });
+    logWithPopupContext({
+      screen_id:      SCREENS.MSG_ACTION_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.MSG_STAR,
+      target_label:   msg.starred ? 'unstar message' : 'star message',
+      next_screen_id: SCREENS.CHAT_VIEW,
+    });
     setMessages(prev => prev.map(m => m.id === msg.id ? {...m, starred:!m.starred} : m));
     onStar && onStar(msg);
     setShowMsgMenu(null);
   };
 
+  const handleCopyMessage = (msg) => {
+    logWithPopupContext({
+      screen_id:      SCREENS.MSG_ACTION_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.MSG_COPY,
+      target_label:   'copy message',
+      next_screen_id: SCREENS.CHAT_VIEW,
+    });
+    navigator.clipboard?.writeText(msg.text);
+    setShowMsgMenu(null);
+  };
+
   const handleMsgClick = (msg) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: `${TARGETS.MSG_ITEM}_${msg.id}`, target_label: msg.text.slice(0,30) });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: `${TARGETS.MSG_ITEM}_${msg.id}`, target_label: msg.text.slice(0,30) });
     updateTaskState && updateTaskState('viewedMessages', msg.id);
     onViewMessage && onViewMessage(msg.id);
   };
 
   const handleScroll = (e) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'scroll', target_id: TARGETS.SCROLL_ACTION, target_label: 'message list scroll' });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'scroll', target_id: TARGETS.SCROLL_ACTION, target_label: 'message list scroll' });
   };
 
   const handleContactHeader = () => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.CONTACT_HEADER, target_label: contact.name, next_screen_id: SCREENS.CONTACT_INFO });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.CONTACT_HEADER, target_label: contact.name, next_screen_id: SCREENS.CONTACT_INFO });
     onOpenContactPanel && onOpenContactPanel();
   };
 
   const handleBack = () => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'back', target_id: TARGETS.BACK_BUTTON, target_label: 'back to chat list', next_screen_id: SCREENS.CHAT_LIST });
+    logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'back', target_id: TARGETS.BACK_BUTTON, target_label: 'back to chat list', next_screen_id: SCREENS.CHAT_LIST });
     onNavigate(SCREENS.CHAT_LIST);
   };
 
+  const handleMsgMoreClick = (msg, anchorEl) => {
+    const opening = showMsgMenu !== msg.id;
+
+    if (opening) {
+      const rect = anchorEl.getBoundingClientRect();
+      const margin = 10;
+      const menuWidth = 180;
+      const estMenuHeight = 190;
+
+      const spaceRight = window.innerWidth - rect.right - margin;
+      const spaceLeft = rect.left - margin;
+      const openLeft = spaceRight < menuWidth && spaceLeft > spaceRight;
+      const left = openLeft ? rect.left - menuWidth - 8 : rect.right + 8;
+
+      const spaceBelow = window.innerHeight - rect.top - margin;
+      const spaceAbove = rect.bottom - margin;
+      const alignBottom = spaceBelow < estMenuHeight && spaceAbove > spaceBelow;
+      const maxHeight = Math.max(100, alignBottom ? spaceAbove : spaceBelow);
+      const top = alignBottom
+        ? Math.max(margin, rect.bottom - Math.min(estMenuHeight, spaceAbove))
+        : rect.top;
+
+      setMsgMenuPos({ left, top, maxHeight });
+    }
+
+    logWithPopupContext({
+      screen_id:      opening ? SCREENS.CHAT_VIEW : SCREENS.MSG_ACTION_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.MSG_MORE_BTN,
+      target_label:   'message options',
+      next_screen_id: opening ? SCREENS.MSG_ACTION_MENU : SCREENS.CHAT_VIEW,
+    });
+
+    setShowMsgMenu(opening ? msg.id : null);
+  };
+
   const handleAttachClick = () => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: TARGETS.ATTACH_BTN, target_label: 'attach' });
+    const opening = !showAttachMenu;
+    logWithPopupContext({
+      screen_id:      opening ? SCREENS.CHAT_VIEW : SCREENS.ATTACH_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.ATTACH_BTN,
+      target_label:   'attach',
+      next_screen_id: opening ? SCREENS.ATTACH_MENU : SCREENS.CHAT_VIEW,
+    });
     setShowMoreMenu(false);
     setShowAttachMenu(v => !v);
   };
 
   const openFilePicker = (accept, targetId, label) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: targetId, target_label: label });
+    logWithPopupContext({ screen_id: SCREENS.ATTACH_MENU, action_type: 'tap', target_id: targetId, target_label: label, next_screen_id: SCREENS.CHAT_VIEW });
     setAttachAccept(accept);
     setShowAttachMenu(false);
     setTimeout(() => fileInputRef.current?.click(), 0);
@@ -174,48 +270,66 @@ export default function ChatView({
     { label:'Poll',           color:'#e3a13f', icon:'📊', target: TARGETS.ATTACH_MENU_POLL,    stub:true },
   ];
 
+  const handleAttachStubClick = (item) => {
+    logWithPopupContext({ screen_id: SCREENS.ATTACH_MENU, action_type:'tap', target_id:item.target, target_label:item.label, next_screen_id: SCREENS.CHAT_VIEW });
+    setShowAttachMenu(false);
+  };
+
   const closeMoreMenu = () => setShowMoreMenu(false);
 
   const moreMenuItems = [
-    { label:'Contact info', target: TARGETS.CHAT_MENU_INFO,
+    { label:'Contact info', target: TARGETS.CHAT_MENU_INFO, nextScreen: SCREENS.CONTACT_INFO,
       action: () => onOpenContactPanel && onOpenContactPanel() },
-    { label:'Search', target: TARGETS.CHAT_MENU_SEARCH,
+    { label:'Search', target: TARGETS.CHAT_MENU_SEARCH, nextScreen: SCREENS.CHAT_SEARCH,
       action: () => onOpenChatSearch && onOpenChatSearch() },
-    { label:'Select messages', target: TARGETS.CHAT_MENU_SELECT,
+    { label:'Select messages', target: TARGETS.CHAT_MENU_SELECT, nextScreen: SCREENS.CHAT_VIEW,
       action: () => {} },
-    { label: isMuted ? 'Unmute notifications' : 'Mute notifications', target: TARGETS.CONTACT_MUTE, arrow:true,
+    { label: isMuted ? 'Unmute notifications' : 'Mute notifications', target: TARGETS.CONTACT_MUTE, arrow:true, nextScreen: SCREENS.CHAT_VIEW,
       action: () => onToggleMute && onToggleMute() },
-    { label:'Disappearing messages', target: TARGETS.CHAT_MENU_DISAPPEARING, arrow:true,
+    { label:'Disappearing messages', target: TARGETS.CHAT_MENU_DISAPPEARING, arrow:true, nextScreen: SCREENS.CHAT_VIEW,
       action: () => {} },
-    { label: isFavorite ? 'Remove from Favourites' : 'Add to Favourites', target: TARGETS.CONTACT_FAVORITE,
+    { label: isFavorite ? 'Remove from Favourites' : 'Add to Favourites', target: TARGETS.CONTACT_FAVORITE, nextScreen: SCREENS.CHAT_VIEW,
       action: () => onToggleFavorite && onToggleFavorite() },
-    { label:'Add to list', target: TARGETS.CHAT_MENU_ADD_LIST, arrow:true,
+    { label:'Add to list', target: TARGETS.CHAT_MENU_ADD_LIST, arrow:true, nextScreen: SCREENS.CHAT_VIEW,
       action: () => {} },
     { divider:true },
-    { label:'Close chat', target: TARGETS.CHAT_MENU_CLOSE_CHAT,
+    { label:'Close chat', target: TARGETS.CHAT_MENU_CLOSE_CHAT, nextScreen: SCREENS.CHAT_LIST,
       action: () => onNavigate(SCREENS.CHAT_LIST) },
-    { label:'Send call link', target: TARGETS.CHAT_MENU_CALL_LINK,
+    { label:'Send call link', target: TARGETS.CHAT_MENU_CALL_LINK, nextScreen: SCREENS.CHAT_VIEW,
       action: () => {} },
-    { label:'Report', target: TARGETS.CHAT_MENU_REPORT,
+    { label:'Report', target: TARGETS.CHAT_MENU_REPORT, nextScreen: SCREENS.CHAT_VIEW,
       action: () => { window.confirm(`Report ${contact.name}? They won't be notified.`); } },
-    { label: isBlocked ? `Unblock ${contact.name}` : `Block ${contact.name}`, target: TARGETS.CONTACT_BLOCK, danger:true,
+    { label: isBlocked ? `Unblock ${contact.name}` : `Block ${contact.name}`, target: TARGETS.CONTACT_BLOCK, danger:true, nextScreen: SCREENS.CHAT_VIEW,
       action: () => onToggleBlock && onToggleBlock() },
-    { label:'Clear chat', target: TARGETS.CHAT_MENU_CLEAR, danger:true,
+    { label:'Clear chat', target: TARGETS.CHAT_MENU_CLEAR, danger:true, nextScreen: SCREENS.CHAT_VIEW,
       action: () => { if (window.confirm('Clear this chat? Messages will be removed for you.')) { onClearChat && onClearChat(chat.id); } } },
-    { label:'Delete chat', target: TARGETS.CHAT_MENU_DELETE, danger:true,
+    { label:'Delete chat', target: TARGETS.CHAT_MENU_DELETE, danger:true, nextScreen: SCREENS.CHAT_LIST,
       action: () => { if (window.confirm('Delete this chat?')) { onDeleteChat && onDeleteChat(chat.id); } } },
   ];
 
   const handleMoreMenuItemClick = (item) => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: item.target, target_label: item.label });
+    logWithPopupContext({
+      screen_id:      SCREENS.CHAT_MORE_MENU,
+      action_type:    'tap',
+      target_id:      item.target,
+      target_label:   item.label,
+      next_screen_id: item.nextScreen || SCREENS.CHAT_VIEW,
+    });
     setShowMoreMenu(false);
     item.action();
   };
 
   const toggleMoreMenu = () => {
-    onLog({ screen_id: SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.CHAT_MORE_BTN, target_label:'more options' });
+    const opening = !showMoreMenu;
+    logWithPopupContext({
+      screen_id:      opening ? SCREENS.CHAT_VIEW : SCREENS.CHAT_MORE_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.CHAT_MORE_BTN,
+      target_label:   'more options',
+      next_screen_id: opening ? SCREENS.CHAT_MORE_MENU : SCREENS.CHAT_VIEW,
+    });
     setShowAttachMenu(false);
-    if (!showMoreMenu) {
+    if (opening) {
       const rect = moreMenuAnchorRef.current?.getBoundingClientRect();
       if (rect) {
         const margin = 12;
@@ -226,6 +340,17 @@ export default function ChatView({
       }
     }
     setShowMoreMenu(v => !v);
+  };
+
+  const handleOverlayDismiss = () => {
+    if (showAttachMenu) {
+      logWithPopupContext({ screen_id: SCREENS.ATTACH_MENU, action_type:'tap', target_id: TARGETS.OVERLAY_DISMISS, target_label:'dismiss attach menu', next_screen_id: SCREENS.CHAT_VIEW });
+    }
+    if (showMoreMenu) {
+      logWithPopupContext({ screen_id: SCREENS.CHAT_MORE_MENU, action_type:'tap', target_id: TARGETS.OVERLAY_DISMISS, target_label:'dismiss more menu', next_screen_id: SCREENS.CHAT_VIEW });
+    }
+    setShowAttachMenu(false);
+    setShowMoreMenu(false);
   };
 
   const replyRef = messages.find(m => m.id === replyTo?.id);
@@ -296,31 +421,8 @@ export default function ChatView({
 
                 {isHovered && (
                   <div style={{ display:'flex', alignItems:'center', gap:4, margin: isMe ? '0 8px 0 0' : '0 0 0 8px', order: isMe ? -1 : 1 }}>
-                    <MsgActionBtn title="Reply" onClick={() => handleReply(msg)}>↩</MsgActionBtn>
-                    <MsgActionBtn title="More" onClick={(e) => {
-                      if (!menuOpen) {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const margin = 10;
-                        const menuWidth = 180;
-                        const estMenuHeight = 190;  
-
-                        const spaceRight = window.innerWidth - rect.right - margin;
-                        const spaceLeft = rect.left - margin;
-                        const openLeft = spaceRight < menuWidth && spaceLeft > spaceRight;
-                        const left = openLeft ? rect.left - menuWidth - 8 : rect.right + 8;
-
-                        const spaceBelow = window.innerHeight - rect.top - margin;
-                        const spaceAbove = rect.bottom - margin;
-                        const alignBottom = spaceBelow < estMenuHeight && spaceAbove > spaceBelow;
-                        const maxHeight = Math.max(100, alignBottom ? spaceAbove : spaceBelow);
-                        const top = alignBottom
-                          ? Math.max(margin, rect.bottom - Math.min(estMenuHeight, spaceAbove))
-                          : rect.top;
-
-                        setMsgMenuPos({ left, top, maxHeight });
-                      }
-                      setShowMsgMenu(menuOpen ? null : msg.id);
-                    }}>⋮</MsgActionBtn>
+                    <MsgActionBtn title="Reply" onClick={() => handleReply(msg, false)}>↩</MsgActionBtn>
+                    <MsgActionBtn title="More" onClick={(e) => handleMsgMoreClick(msg, e.currentTarget)}>⋮</MsgActionBtn>
                   </div>
                 )}
 
@@ -357,10 +459,10 @@ export default function ChatView({
                     zIndex:500, width:180, maxHeight:msgMenuPos.maxHeight, overflowY:'auto',
                   }}>
                     {[
-                      { label:'Reply', action:() => handleReply(msg) },
+                      { label:'Reply', action:() => handleReply(msg, true) },
                       { label:'Forward', action:() => handleForwardInit(msg) },
                       { label: msg.starred ? 'Unstar' : 'Star message', action:() => handleStar(msg) },
-                      { label:'Copy', action:() => { navigator.clipboard?.writeText(msg.text); setShowMsgMenu(null); } },
+                      { label:'Copy', action:() => handleCopyMessage(msg) },
                     ].map(item => (
                       <div key={item.label} onClick={item.action}
                         style={{ padding:'12px 16px', color:'#111b21', fontSize:14, cursor:'pointer' }}
@@ -384,7 +486,7 @@ export default function ChatView({
             <div style={{ color:'#00a884', fontSize:12, fontWeight:600, marginBottom:2 }}>{replyTo.from === 'me' ? 'You' : contact.name}</div>
             <div style={{ color:'#667781', fontSize:13 }}>{replyTo.text.slice(0,60)}</div>
           </div>
-          <button onClick={() => { setReplyTo(null); onLog({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.REPLY_CANCEL, target_label:'cancel reply' }); }}
+          <button onClick={() => { setReplyTo(null); logWithPopupContext({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.REPLY_CANCEL, target_label:'cancel reply' }); }}
             style={{ background:'none', border:'none', color:'#667781', cursor:'pointer', fontSize:20, lineHeight:1 }}>×</button>
         </div>
       )}
@@ -396,9 +498,7 @@ export default function ChatView({
           <div style={{ position:'absolute', bottom:'100%', left:8, marginBottom:8, background:'#ffffff', borderRadius:12, boxShadow:'0 4px 18px rgba(0,0,0,0.18)', border:'1px solid #e9edef', zIndex:70, padding:'8px 6px', minWidth:230, maxWidth:'calc(100vw - 32px)', maxHeight:'60dvh', overflowY:'auto' }}>
             {attachOptions.map(item => (
               <div key={item.label}
-                onClick={() => item.stub
-                  ? (() => { onLog({ screen_id: SCREENS.CHAT_VIEW, action_type:'tap', target_id:item.target, target_label:item.label }); setShowAttachMenu(false); })()
-                  : openFilePicker(item.accept, item.target, item.label)}
+                onClick={() => item.stub ? handleAttachStubClick(item) : openFilePicker(item.accept, item.target, item.label)}
                 style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 12px', borderRadius:8, cursor:'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.background='#f5f6f6'}
                 onMouseLeave={e => e.currentTarget.style.background='transparent'}>
@@ -417,13 +517,13 @@ export default function ChatView({
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </IconBtn>
-          <IconBtn title="Emoji" onClick={() => { setShowAttachMenu(false); onLog({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.EMOJI_BTN, target_label:'emoji' }); }}>
+          <IconBtn title="Emoji" onClick={() => { setShowAttachMenu(false); logWithPopupContext({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.EMOJI_BTN, target_label:'emoji' }); }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#54656f"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
           </IconBtn>
           <input
             ref={inputRef}
             value={input}
-            onChange={e => { setInput(e.target.value); onLog({ screen_id:SCREENS.CHAT_VIEW, action_type:'text_input', target_id:TARGETS.MSG_INPUT, target_label:'message input' }); }}
+            onChange={e => { setInput(e.target.value); logWithPopupContext({ screen_id:SCREENS.CHAT_VIEW, action_type:'text_input', target_id:TARGETS.MSG_INPUT, target_label:'message input' }); }}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
             onFocus={() => { setShowAttachMenu(false); setShowMoreMenu(false); }}
             placeholder="Type a message"
@@ -440,14 +540,14 @@ export default function ChatView({
       </div>
 
       {(showAttachMenu || showMoreMenu) && (
-        <div onClick={() => { setShowAttachMenu(false); setShowMoreMenu(false); }} style={{ position:'fixed', inset:0, zIndex:60 }} />
+        <div onClick={handleOverlayDismiss} style={{ position:'fixed', inset:0, zIndex:60 }} />
       )}
 
       {showForward && (
         <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.4)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center' }}>
           <div style={{ background:'#ffffff', borderRadius:12, width:'min(380px, 92vw)', maxHeight:'80dvh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 10px 40px rgba(0,0,0,0.25)' }}>
             <div style={{ padding:'16px 20px', borderBottom:'1px solid #e9edef', display:'flex', alignItems:'center', gap:12 }}>
-              <button onClick={() => { setShowForward(null); onLog({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.FORWARD_CANCEL, target_label:'cancel forward' }); }}
+              <button onClick={handleForwardCancel}
                 style={{ background:'none', border:'none', color:'#667781', cursor:'pointer', fontSize:20 }}>×</button>
               <div>
                 <div style={{ color:'#111b21', fontSize:16, fontWeight:600 }}>Forward message</div>

@@ -11,6 +11,14 @@ export const SCREENS = {
   SETTINGS:          'SCR_SETTINGS',
   TASK_COMPLETE:     'SCR_TASK_COMPLETE',
   SESSION_COMPLETE:  'SCR_SESSION_COMPLETE',
+
+  CHAT_SEARCH:        'SCR_CHAT_SEARCH',
+
+  FORWARD_MODAL:      'SCR_FORWARD_MODAL',
+  ATTACH_MENU:        'SCR_ATTACH_MENU',
+  CHAT_MORE_MENU:     'SCR_CHAT_MORE_MENU',
+  MSG_ACTION_MENU:    'SCR_MSG_ACTION_MENU',
+  SIDEBAR_MENU:       'SCR_SIDEBAR_MENU',
 };
 
 export const TARGETS = {
@@ -31,6 +39,8 @@ export const TARGETS = {
   MSG_FORWARD:         'TGT_MSG_FORWARD',
   MSG_STAR:            'TGT_MSG_STAR',
   MSG_ITEM:            'TGT_MSG_ITEM',
+  MSG_MORE_BTN:        'TGT_MSG_MORE_BTN',
+  MSG_COPY:            'TGT_MSG_COPY',
   REPLY_CANCEL:        'TGT_REPLY_CANCEL',
   SEND_BTN:            'TGT_SEND_BTN',
   ATTACH_BTN:          'TGT_ATTACH_BTN',
@@ -89,7 +99,28 @@ export const TARGETS = {
   ATTACH_MENU_CAMERA:  'TGT_ATTACH_CAMERA',
   ATTACH_MENU_CONTACT: 'TGT_ATTACH_CONTACT',
   ATTACH_MENU_POLL:    'TGT_ATTACH_POLL',
+
+  OVERLAY_DISMISS:     'TGT_OVERLAY_DISMISS',
 };
+
+export const ADAPTIVE_PANEL_SCREENS = new Set([
+  SCREENS.CONTACT_INFO,
+  SCREENS.CHAT_SEARCH,
+]);
+
+export const POPUP_SCREENS = new Set([
+  SCREENS.FORWARD_MODAL,
+  SCREENS.ATTACH_MENU,
+  SCREENS.CHAT_MORE_MENU,
+  SCREENS.MSG_ACTION_MENU,
+  SCREENS.SIDEBAR_MENU,
+]);
+
+export function getScreenType(screenId) {
+  if (POPUP_SCREENS.has(screenId)) return 'popup';
+  if (ADAPTIVE_PANEL_SCREENS.has(screenId)) return 'adaptive_panel';
+  return 'screen';
+}
 
 export const CONTACTS = [
   { id: 'C01', name: 'Alice Johnson',   avatar: 'AJ', color: '#6B8CFF', phone: '+1 312 555 0101' },

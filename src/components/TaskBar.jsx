@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-export default function TaskBar({ task, taskIndex, totalTasks, active = true, onLog, onHeightChange }) {
+export default function TaskBar({ task, taskIndex, totalTasks, active = true, onLog, onHeightChange, onMaxAttemptsReached }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const timeoutRef = useRef(null);
   const barRef = useRef(null);
+  const prematureClicksRef = useRef(0);
 
   useEffect(() => {
     setShowFeedback(false);
+    prematureClicksRef.current = 0;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -26,11 +28,20 @@ export default function TaskBar({ task, taskIndex, totalTasks, active = true, on
   const handleDoneClick = () => {
     if (!active) return;
 
+    prematureClicksRef.current += 1;
+
     onLog && onLog({
       action_type:  'tap',
       target_id:    'TGT_TASK_DONE',
-      target_label: 'done button (premature)',
+      target_label: `done button (premature attempt ${prematureClicksRef.current})`,
     });
+
+    if (prematureClicksRef.current >= 2) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setShowFeedback(false);
+      onMaxAttemptsReached && onMaxAttemptsReached();
+      return;
+    }
 
     setShowFeedback(true);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
