@@ -6,7 +6,7 @@ import { MOBILE_BREAKPOINT } from './responsive';
 let eventCounter = 0;
 const genId = (prefix) => `${prefix}_${Date.now()}_${++eventCounter}`;
 
-const IDLE_THRESHOLD_MS = 1000;
+const IDLE_THRESHOLD_MS = 1000; // gaps longer than this (with no pointer, touch, scroll, or keyboard activity) count as idle time
 
 export function useLogger(participant) {
   const [taskTrials, setTaskTrials] = useState([]);
@@ -60,6 +60,19 @@ export function useLogger(participant) {
       lastActivityRef.current = now;
     };
 
+    // Keystrokes don't carry a pointer position, so they update the idle
+    // clock directly without touching lastPointerPosRef (recordPosition is
+    // skipped here — a keydown doesn't tell us where the cursor is).
+    const recordKeyActivity = () => {
+      if (!currentTrialRef.current) return;
+      const now = Date.now();
+      if (lastActivityRef.current != null) {
+        const gap = now - lastActivityRef.current;
+        if (gap > IDLE_THRESHOLD_MS) idleMsRef.current += gap;
+      }
+      lastActivityRef.current = now;
+    };
+
     const opts = { passive: true };
     window.addEventListener('pointermove', recordActivity, opts);
     window.addEventListener('pointerdown', recordActivity, opts);
@@ -67,6 +80,7 @@ export function useLogger(participant) {
     window.addEventListener('mousemove', recordActivity, opts);
     window.addEventListener('mousedown', recordActivity, opts);
     window.addEventListener('scroll', recordActivity, { passive: true, capture: true });
+    window.addEventListener('keydown', recordKeyActivity, opts);
 
     return () => {
       window.removeEventListener('pointermove', recordActivity, opts);
@@ -75,6 +89,7 @@ export function useLogger(participant) {
       window.removeEventListener('mousemove', recordActivity, opts);
       window.removeEventListener('mousedown', recordActivity, opts);
       window.removeEventListener('scroll', recordActivity, true);
+      window.removeEventListener('keydown', recordKeyActivity, opts);
     };
   }, []);
 
@@ -235,6 +250,7 @@ export function useLogger(participant) {
 
     const participantRow = participant ? [{
       participant_id:         participant.participant_id,
+      name:                   participant.name,
       age:                    participant.age,
       age_group:              participant.age_group,
       scc_status:             participant.scc_status,
@@ -315,6 +331,7 @@ export function useLogger(participant) {
     const payload = {
       participant: participant ? {
         participant_id:         participant.participant_id,
+        name:                   participant.name,
         age:                    participant.age,
         age_group:              participant.age_group,
         scc_status:             participant.scc_status,
