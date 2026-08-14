@@ -6,7 +6,7 @@ import { MOBILE_BREAKPOINT } from './responsive';
 let eventCounter = 0;
 const genId = (prefix) => `${prefix}_${Date.now()}_${++eventCounter}`;
 
-const IDLE_THRESHOLD_MS = 1000; // gaps longer than this (with no pointer, touch, scroll, or keyboard activity) count as idle time
+const IDLE_THRESHOLD_MS = 1000; 
 
 export function useLogger(participant) {
   const [taskTrials, setTaskTrials] = useState([]);
@@ -60,9 +60,6 @@ export function useLogger(participant) {
       lastActivityRef.current = now;
     };
 
-    // Keystrokes don't carry a pointer position, so they update the idle
-    // clock directly without touching lastPointerPosRef (recordPosition is
-    // skipped here — a keydown doesn't tell us where the cursor is).
     const recordKeyActivity = () => {
       if (!currentTrialRef.current) return;
       const now = Date.now();
