@@ -1,4 +1,4 @@
 node_modules/
 .env
 server/service-account-key.json
-*.Zone.Identifier
+*.Zone.Identifier.DS_Store
