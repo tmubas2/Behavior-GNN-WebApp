@@ -1,423 +1,204 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import * as XLSX from 'xlsx';
-import { getScreenType } from './data';
-import { MOBILE_BREAKPOINT } from './responsive';
+const { google } = require('googleapis');
 
-let eventCounter = 0;
-const genId = (prefix) => `${prefix}_${Date.now()}_${++eventCounter}`;
+const SHEET_SCHEMAS = {
+  Participants: [
+    'participant_id', 'age', 'age_group', 'scc_status', 'scc_score',
+    'digital_literacy_score', 'smartphone_experience', 'notes', 'session_timestamp',
+  ],
+  Task_Trials: [
+    'task_trial_id', 'participant_id', 'task_id', 'task_name', 'task_order',
+    'start_time', 'end_time', 'duration_seconds', 'idle_seconds', 'completed', 'success',
+    'help_used', 'notes',
+  ],
+  Interaction_Events: [
+    'event_id', 'task_trial_id', 'participant_id', 'task_id', 'event_order',
+    'timestamp', 'from_screen_id', 'screen_id', 'screen_type', 'action_type', 'target_id',
+    'target_label', 'next_screen_id', 'active_popup_id',
+    'click_x', 'click_y', 'click_x_pct', 'click_y_pct', 'viewport_width', 'viewport_height',
+    'device_context', 'interactive_element_count',
+  ],
+};
 
-const IDLE_THRESHOLD_MS = 1000; 
+let sheetsClient = null;
 
-export function useLogger(participant) {
-  const [taskTrials, setTaskTrials] = useState([]);
-  const [interactionEvents, setInteractionEvents] = useState([]);
-  const currentTrialRef = useRef(null);
-  const taskStartTimeRef = useRef(null);
-  const lastScreenRef = useRef('');
-  const exportedRef = useRef(false);
+function loadCredentials() {
+  const raw = process.env.GOOGLE_CREDENTIALS_JSON;
+  if (!raw) return null;
 
-  const sheetsStatusRef = useRef('idle');
-  const [sheetsStatus, setSheetsStatus] = useState('idle');
-  const [sheetsError, setSheetsError] = useState(null);
-
-  const lastPointerPosRef = useRef({ x: null, y: null });
-
-  const idleMsRef = useRef(0);
-  const lastActivityRef = useRef(null);
-
-  const [taskState, setTaskState] = useState({
-    viewedMessages: [],
-    viewedChats: [],
-    sentMessages: [],
-    forwardedMessages: [],
-    newChatsStarted: [],
-    searchesPerformed: [],
-  });
-
-  const updateTaskState = useCallback((key, value) => {
-    setTaskState(prev => ({
-      ...prev,
-      [key]: Array.isArray(prev[key]) ? [...prev[key], value] : value,
-    }));
-  }, []);
-
-  useEffect(() => {
-    const recordPosition = (e) => {
-      const point = e.touches && e.touches[0] ? e.touches[0] : e;
-      if (typeof point.clientX === 'number' && typeof point.clientY === 'number') {
-        lastPointerPosRef.current = { x: Math.round(point.clientX), y: Math.round(point.clientY) };
-      }
-    };
-
-    const recordActivity = (e) => {
-      recordPosition(e);
-      if (!currentTrialRef.current) return;
-      const now = Date.now();
-      if (lastActivityRef.current != null) {
-        const gap = now - lastActivityRef.current;
-        if (gap > IDLE_THRESHOLD_MS) idleMsRef.current += gap;
-      }
-      lastActivityRef.current = now;
-    };
-
-    const recordKeyActivity = () => {
-      if (!currentTrialRef.current) return;
-      const now = Date.now();
-      if (lastActivityRef.current != null) {
-        const gap = now - lastActivityRef.current;
-        if (gap > IDLE_THRESHOLD_MS) idleMsRef.current += gap;
-      }
-      lastActivityRef.current = now;
-    };
-
-    const opts = { passive: true };
-    window.addEventListener('pointermove', recordActivity, opts);
-    window.addEventListener('pointerdown', recordActivity, opts);
-    window.addEventListener('touchmove', recordActivity, opts);
-    window.addEventListener('mousemove', recordActivity, opts);
-    window.addEventListener('mousedown', recordActivity, opts);
-    window.addEventListener('scroll', recordActivity, { passive: true, capture: true });
-    window.addEventListener('keydown', recordKeyActivity, opts);
-
-    return () => {
-      window.removeEventListener('pointermove', recordActivity, opts);
-      window.removeEventListener('pointerdown', recordActivity, opts);
-      window.removeEventListener('touchmove', recordActivity, opts);
-      window.removeEventListener('mousemove', recordActivity, opts);
-      window.removeEventListener('mousedown', recordActivity, opts);
-      window.removeEventListener('scroll', recordActivity, true);
-      window.removeEventListener('keydown', recordKeyActivity, opts);
-    };
-  }, []);
-
-  const resetSession = useCallback(() => {
-    setTaskTrials([]);
-    setInteractionEvents([]);
-    setTaskState({
-      viewedMessages: [],
-      viewedChats: [],
-      sentMessages: [],
-      forwardedMessages: [],
-      newChatsStarted: [],
-      searchesPerformed: [],
-    });
-    currentTrialRef.current = null;
-    taskStartTimeRef.current = null;
-    lastScreenRef.current = '';
-    exportedRef.current = false;
-    sheetsStatusRef.current = 'idle';
-    setSheetsStatus('idle');
-    setSheetsError(null);
-    idleMsRef.current = 0;
-    lastActivityRef.current = null;
-    lastPointerPosRef.current = { x: null, y: null };
-  }, []);
-
-  const logEvent = useCallback((params) => {
-    if (!currentTrialRef.current) return;
-    const screenId = params.screen_id || lastScreenRef.current || '';
-    const { x, y } = lastPointerPosRef.current;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const event = {
-      event_id:        genId('EVT'),
-      task_trial_id:   currentTrialRef.current.task_trial_id,
-      participant_id:  participant?.participant_id || 'UNKNOWN',
-      task_id:         currentTrialRef.current.task_id,
-      event_order:     ++eventCounter,
-      timestamp:       new Date().toISOString(),
-      from_screen_id:  lastScreenRef.current || screenId,
-      screen_id:       screenId,
-      screen_type:     getScreenType(screenId),
-      action_type:     params.action_type  || '',
-      target_id:       params.target_id    || '',
-      target_label:    params.target_label || '',
-      next_screen_id:  params.next_screen_id || '',
-      active_popup_id: params.active_popup_id || '',
-      click_x:         x != null ? x : '',
-      click_y:         y != null ? y : '',
-      click_x_pct:     x != null && vw ? Number((x / vw).toFixed(4)) : '',
-      click_y_pct:     y != null && vh ? Number((y / vh).toFixed(4)) : '',
-      viewport_width:  vw,
-      viewport_height: vh,
-      device_context:  vw < MOBILE_BREAKPOINT ? 'mobile' : 'desktop',
-    };
-    if (params.next_screen_id) {
-      lastScreenRef.current = params.next_screen_id;
-    } else if (screenId) {
-      lastScreenRef.current = screenId;
-    }
-    setInteractionEvents(prev => [...prev, event]);
-    return event;
-  }, [participant]);
-
-  const startTrial = useCallback((task, taskOrder) => {
-    sheetsStatusRef.current = 'idle';
-    setSheetsStatus('idle');
-    setSheetsError(null);
-    exportedRef.current = false;
-    lastScreenRef.current = '';
-
-    idleMsRef.current = 0;
-    lastActivityRef.current = Date.now();
-
-    const trial = {
-      task_trial_id:    genId('TRL'),
-      participant_id:   participant?.participant_id || 'UNKNOWN',
-      task_id:          task.task_id,
-      task_name:        task.task_name,
-      task_order:       taskOrder,
-      start_time:       new Date().toISOString(),
-      end_time:         null,
-      duration_seconds: null,
-      idle_seconds:     null,
-      completed:        false,
-      success:          false,
-      help_used:        false,
-      notes:            '',
-    };
-    currentTrialRef.current = trial;
-    taskStartTimeRef.current = Date.now();
-
-    setTaskState({
-      viewedMessages: [],
-      viewedChats: [],
-      sentMessages: [],
-      forwardedMessages: [],
-      newChatsStarted: [],
-      searchesPerformed: [],
-    });
-
-    logEvent({
-      screen_id:    'SCR_TASK_BRIEF',
-      action_type:  'task_start',
-      target_id:    task.task_id,
-      target_label: task.task_name,
-    });
-    return trial;
-  }, [participant, logEvent]);
-
-  const endTrial = useCallback((success, helpUsed = false, notes = '') => {
-    if (!currentTrialRef.current) return;
-    const end = new Date();
-    const start = new Date(currentTrialRef.current.start_time);
-    const duration = Math.round((end - start) / 1000);
-
-    if (lastActivityRef.current != null) {
-      const tailGap = end.getTime() - lastActivityRef.current;
-      if (tailGap > IDLE_THRESHOLD_MS) idleMsRef.current += tailGap;
-    }
-    const idleSeconds = Math.round(idleMsRef.current / 1000);
-
-    const completed = {
-      ...currentTrialRef.current,
-      end_time:         end.toISOString(),
-      duration_seconds: duration,
-      idle_seconds:     idleSeconds,
-      completed:        true,
-      success,
-      help_used:        helpUsed,
-      notes,
-    };
-
-    logEvent({
-      screen_id:    'SCR_TASK_COMPLETE',
-      action_type:  'task_end',
-      target_id:    'TGT_TASK_DONE',
-      target_label: success ? 'success' : 'incomplete',
-    });
-    setTaskTrials(prev => [...prev, completed]);
-    currentTrialRef.current = null;
-    return completed;
-  }, [logEvent]);
-
-  const markHelpUsed = useCallback(() => {
-    if (currentTrialRef.current) {
-      currentTrialRef.current.help_used = true;
-    }
-    logEvent({
-      action_type:  'help',
-      target_id:    'TGT_HELP_BTN',
-      target_label: 'help button',
-    });
-  }, [logEvent]);
-
-  const buildWorkbook = useCallback(() => {
-    const wb = XLSX.utils.book_new();
-
-    const participantRow = participant ? [{
-      participant_id:         participant.participant_id,
-      name:                   participant.name,
-      age:                    participant.age,
-      age_group:              participant.age_group,
-      scc_status:             participant.scc_status,
-      scc_score:              participant.scc_score,
-      digital_literacy_score: participant.digital_literacy_score,
-      smartphone_experience:  participant.smartphone_experience,
-      notes:                  participant.notes || '',
-    }] : [];
-    const wsP = XLSX.utils.json_to_sheet(participantRow);
-    XLSX.utils.book_append_sheet(wb, wsP, 'Participants');
-
-    const wsTT = XLSX.utils.json_to_sheet(taskTrials.map(t => ({
-      task_trial_id:    t.task_trial_id,
-      participant_id:   t.participant_id,
-      task_id:          t.task_id,
-      task_name:        t.task_name,
-      task_order:       t.task_order,
-      start_time:       t.start_time,
-      end_time:         t.end_time,
-      duration_seconds: t.duration_seconds,
-      idle_seconds:     t.idle_seconds,
-      completed:        t.completed ? 'TRUE' : 'FALSE',
-      success:          t.success   ? 'TRUE' : 'FALSE',
-      help_used:        t.help_used ? 'TRUE' : 'FALSE',
-      notes:            t.notes,
-    })));
-    XLSX.utils.book_append_sheet(wb, wsTT, 'Task_Trials');
-
-    const wsIE = XLSX.utils.json_to_sheet(interactionEvents.map(e => ({
-      event_id:        e.event_id,
-      task_trial_id:   e.task_trial_id,
-      participant_id:  e.participant_id,
-      task_id:         e.task_id,
-      event_order:     e.event_order,
-      timestamp:       e.timestamp,
-      from_screen_id:  e.from_screen_id,
-      screen_id:       e.screen_id,
-      screen_type:     e.screen_type,
-      action_type:     e.action_type,
-      target_id:       e.target_id,
-      target_label:    e.target_label,
-      next_screen_id:  e.next_screen_id,
-      active_popup_id: e.active_popup_id,
-      click_x:         e.click_x,
-      click_y:         e.click_y,
-      click_x_pct:     e.click_x_pct,
-      click_y_pct:     e.click_y_pct,
-      viewport_width:  e.viewport_width,
-      viewport_height: e.viewport_height,
-      device_context:  e.device_context,
-    })));
-    XLSX.utils.book_append_sheet(wb, wsIE, 'Interaction_Events');
-
-    return wb;
-  }, [participant, taskTrials, interactionEvents]);
-
-  
-  const exportToExcel = useCallback(() => {
-    const wb = buildWorkbook();
-    const filename = `research_${participant?.participant_id || 'unknown'}_${Date.now()}.xlsx`;
-    XLSX.writeFile(wb, filename);
-    exportedRef.current = true;
-    return filename;
-  }, [buildWorkbook, participant]);
-
-  const autoExportOnSessionEnd = useCallback(() => {
-    if (exportedRef.current) return null;
-    return exportToExcel();
-  }, [exportToExcel]);
-
-  const sendToGoogleSheets = useCallback(async () => {
-    if (sheetsStatusRef.current === 'sending') return { skipped: true };
-
-    sheetsStatusRef.current = 'sending';
-    setSheetsStatus('sending');
-    setSheetsError(null);
-
-    const payload = {
-      participant: participant ? {
-        participant_id:         participant.participant_id,
-        name:                   participant.name,
-        age:                    participant.age,
-        age_group:              participant.age_group,
-        scc_status:             participant.scc_status,
-        scc_score:              participant.scc_score,
-        digital_literacy_score: participant.digital_literacy_score,
-        smartphone_experience:  participant.smartphone_experience,
-        notes:                  participant.notes || '',
-      } : null,
-      taskTrials: taskTrials.map(t => ({
-        task_trial_id:    t.task_trial_id,
-        participant_id:   t.participant_id,
-        task_id:          t.task_id,
-        task_name:        t.task_name,
-        task_order:       t.task_order,
-        start_time:       t.start_time,
-        end_time:         t.end_time,
-        duration_seconds: t.duration_seconds,
-        idle_seconds:     t.idle_seconds,
-        completed:        !!t.completed,
-        success:          !!t.success,
-        help_used:        !!t.help_used,
-        notes:            t.notes,
-      })),
-      interactionEvents: interactionEvents.map(e => ({
-        event_id:        e.event_id,
-        task_trial_id:   e.task_trial_id,
-        participant_id:  e.participant_id,
-        task_id:         e.task_id,
-        event_order:     e.event_order,
-        timestamp:       e.timestamp,
-        from_screen_id:  e.from_screen_id,
-        screen_id:       e.screen_id,
-        screen_type:     e.screen_type,
-        action_type:     e.action_type,
-        target_id:       e.target_id,
-        target_label:    e.target_label,
-        next_screen_id:  e.next_screen_id,
-        active_popup_id: e.active_popup_id,
-        click_x:         e.click_x,
-        click_y:         e.click_y,
-        click_x_pct:     e.click_x_pct,
-        click_y_pct:     e.click_y_pct,
-        viewport_width:  e.viewport_width,
-        viewport_height: e.viewport_height,
-        device_context:  e.device_context,
-      })),
-    };
-
+  let jsonString = raw.trim();
+  const looksLikeJson = jsonString.startsWith('{');
+  if (!looksLikeJson) {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:4000';
-      const response = await fetch(`${apiUrl}/api/session`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Unknown server error');
-
-      sheetsStatusRef.current = 'success';
-      setSheetsStatus('success');
-      return { success: true, ...data };
+      jsonString = Buffer.from(jsonString, 'base64').toString('utf8');
     } catch (err) {
-      sheetsStatusRef.current = 'error';
-      setSheetsStatus('error');
-      setSheetsError(err.message);
-      return { success: false, error: err.message };
+      throw new Error('GOOGLE_CREDENTIALS_JSON is set but is neither valid JSON nor valid base64');
     }
-  }, [participant, taskTrials, interactionEvents]);
+  }
 
-  const autoSendOnSessionEnd = useCallback(() => {
-    return sendToGoogleSheets();
-  }, [sendToGoogleSheets]);
+  try {
+    return JSON.parse(jsonString);
+  } catch (err) {
+    throw new Error('GOOGLE_CREDENTIALS_JSON could not be parsed as JSON: ' + err.message);
+  }
+}
+
+async function getSheetsClient() {
+  if (sheetsClient) return sheetsClient;
+
+  const credentials = loadCredentials();
+
+  const authOptions = { scopes: ['https://www.googleapis.com/auth/spreadsheets'] };
+  if (credentials) {
+    authOptions.credentials = credentials;
+  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    authOptions.keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  } else {
+    throw new Error(
+      'No Google credentials found. Set GOOGLE_CREDENTIALS_JSON (recommended for hosted deployments) ' +
+      'or GOOGLE_APPLICATION_CREDENTIALS (a local key file path) in your environment.'
+    );
+  }
+
+  const auth = new google.auth.GoogleAuth(authOptions);
+  const authClient = await auth.getClient();
+  sheetsClient = google.sheets({ version: 'v4', auth: authClient });
+  return sheetsClient;
+}
+
+async function getSheetId(sheets, spreadsheetId, tabName) {
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheet = meta.data.sheets.find(s => s.properties.title === tabName);
+  return sheet ? sheet.properties.sheetId : null;
+}
+
+async function getRowCount(sheets, spreadsheetId, tabName) {
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${tabName}!A:A`,
+    });
+    return (res.data.values || []).length;
+  } catch {
+    return 0;
+  }
+}
+
+async function ensureSheetExists(sheets, spreadsheetId, tabName, headers) {
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const existingTabs = meta.data.sheets.map(s => s.properties.title);
+
+  if (!existingTabs.includes(tabName)) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [{ addSheet: { properties: { title: tabName } } }],
+      },
+    });
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${tabName}!A1`,
+      valueInputOption: 'RAW',
+      requestBody: { values: [headers] },
+    });
+    return;
+  }
+
+  const headerRes = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${tabName}!A1:ZZ1`,
+  });
+  const existingHeaders = (headerRes.data.values && headerRes.data.values[0]) || [];
+  const missing = headers.filter(h => !existingHeaders.includes(h));
+  if (missing.length > 0) {
+    const mergedHeaders = [...existingHeaders, ...missing];
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${tabName}!A1`,
+      valueInputOption: 'RAW',
+      requestBody: { values: [mergedHeaders] },
+    });
+  }
+}
+
+
+async function insertBlankRow(sheets, spreadsheetId, tabName) {
+  const sheetId = await getSheetId(sheets, spreadsheetId, tabName);
+  if (sheetId === null) return;
+
+  const rowCount = await getRowCount(sheets, spreadsheetId, tabName);
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{
+        insertDimension: {
+          range: {
+            sheetId,
+            dimension: 'ROWS',
+            startIndex: rowCount,   
+            endIndex: rowCount + 1,
+          },
+          inheritFromBefore: false,
+        },
+      }],
+    },
+  });
+}
+
+async function appendRows(sheets, spreadsheetId, tabName, rows) {
+  if (!rows || rows.length === 0) return;
+
+  const headerRes = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${tabName}!A1:ZZ1`,
+  });
+  const headers = (headerRes.data.values && headerRes.data.values[0]) || SHEET_SCHEMAS[tabName];
+
+  const values = rows.map(row => headers.map(h => {
+    const v = row[h];
+    if (v === undefined || v === null) return '';
+    if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+    return v;
+  }));
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: `${tabName}!A1`,
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: { values },
+  });
+}
+
+async function writeSessionToSheet({ participant, taskTrials, interactionEvents }) {
+  const spreadsheetId = process.env.SPREADSHEET_ID;
+  if (!spreadsheetId) throw new Error('SPREADSHEET_ID is not set in environment variables');
+
+  const sheets = await getSheetsClient();
+
+  await ensureSheetExists(sheets, spreadsheetId, 'Participants',       SHEET_SCHEMAS.Participants);
+  await ensureSheetExists(sheets, spreadsheetId, 'Task_Trials',        SHEET_SCHEMAS.Task_Trials);
+  await ensureSheetExists(sheets, spreadsheetId, 'Interaction_Events', SHEET_SCHEMAS.Interaction_Events);
+
+  const sessionTimestamp = new Date().toISOString();
+
+  await appendRows(sheets, spreadsheetId, 'Participants', [
+    { ...participant, session_timestamp: sessionTimestamp },
+  ]);
+  await appendRows(sheets, spreadsheetId, 'Task_Trials', taskTrials);
+
+  const eventRowCount = await getRowCount(sheets, spreadsheetId, 'Interaction_Events');
+  if (eventRowCount > 1) {
+    await insertBlankRow(sheets, spreadsheetId, 'Interaction_Events');
+  }
+
+  await appendRows(sheets, spreadsheetId, 'Interaction_Events', interactionEvents);
 
   return {
-    taskTrials,
-    interactionEvents,
-    taskState,
-    logEvent,
-    startTrial,
-    endTrial,
-    markHelpUsed,
-    updateTaskState,
-    resetSession,
-    exportToExcel,
-    autoExportOnSessionEnd,
-    sendToGoogleSheets,
-    autoSendOnSessionEnd,
-    sheetsStatus,
-    sheetsError,
-    currentTrial: currentTrialRef.current,
+    participantsWritten:      1,
+    taskTrialsWritten:        taskTrials.length,
+    interactionEventsWritten: interactionEvents.length,
   };
 }
+
+module.exports = { writeSessionToSheet, SHEET_SCHEMAS };

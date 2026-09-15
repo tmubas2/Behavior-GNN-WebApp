@@ -15,7 +15,7 @@ const SHEET_SCHEMAS = {
     'timestamp', 'from_screen_id', 'screen_id', 'screen_type', 'action_type', 'target_id',
     'target_label', 'next_screen_id', 'active_popup_id',
     'click_x', 'click_y', 'click_x_pct', 'click_y_pct', 'viewport_width', 'viewport_height',
-    'device_context',
+    'device_context', 'interactive_element_count',
   ],
 };
 
