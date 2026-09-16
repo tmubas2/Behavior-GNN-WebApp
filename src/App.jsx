@@ -65,13 +65,7 @@ export default function App() {
     setTaskStartTime(Date.now());
     setTaskPhase('active');
 
-    if (currentTask.task_id === 'T01') {
-      const aliceChat = chats.find(c => c.contactId === 'C01');
-      const lastAliceMsg = aliceChat?.messages[aliceChat.messages.length - 1];
-      taskTargetRef.current = { requiredMessageId: lastAliceMsg?.id || null };
-    } else {
-      taskTargetRef.current = {};
-    }
+    taskTargetRef.current = currentTask.setup ? (currentTask.setup(chats) || {}) : {};
 
     logEvent({
       screen_id:    SCREENS.TASK_BRIEFING,
@@ -95,22 +89,9 @@ export default function App() {
   useEffect(() => {
     if (taskPhase !== 'active' || !currentTask) return;
 
-    let fulfilled = false;
-
-    if (currentTask.task_id === 'T01') {
-      const requiredMessageId = taskTargetRef.current.requiredMessageId;
-      fulfilled = !!requiredMessageId && taskState.forwardedMessages.some(
-        (f) => f.to === 'C02' && f.msg?.id === requiredMessageId
-      );
-    } else if (currentTask.task_id === 'T02') {
-      const required = ['C01', 'C03', 'C05'];
-      fulfilled = chats.some((c) => (
-        c.isGroup &&
-        Array.isArray(c.members) &&
-        c.members.length === required.length &&
-        required.every((id) => c.members.includes(id))
-      ));
-    }
+    const fulfilled = currentTask.checkCompletion
+      ? !!currentTask.checkCompletion(taskTargetRef.current, taskState, chats)
+      : false;
 
     if (fulfilled) {
       handleTaskComplete(true);

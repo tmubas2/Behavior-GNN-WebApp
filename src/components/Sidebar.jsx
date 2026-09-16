@@ -287,7 +287,8 @@ export default function Sidebar({
     { label:'Starred messages', id: TARGETS.NAV_STARRED, nextScreen: SCREENS.STARRED, action: () => onNavigate(SCREENS.STARRED) },
     { label:'Select chats', id: TARGETS.SIDEBAR_MENU_SELECT_CHATS, nextScreen: SCREENS.CHAT_LIST, action: () => { setSelectMode(v => !v); setSelectedChats(new Set()); } },
     { label:'Mark all as read', id: TARGETS.SIDEBAR_MENU_MARK_ALL_READ, nextScreen: SCREENS.CHAT_LIST, action: () => setReadChats(new Set(liveChats.map(c => c.id))) },
-    { label:'App lock', id: TARGETS.SIDEBAR_MENU_APP_LOCK, nextScreen: SCREENS.SETTINGS, action: () => onNavigate(SCREENS.SETTINGS) },
+    { label:'App lock', id: TARGETS.SIDEBAR_MENU_APP_LOCK, nextScreen: currentScreen, action: () => {} },
+    { label:'Settings', id: TARGETS.SIDEBAR_MENU_SETTINGS, nextScreen: SCREENS.SETTINGS, action: () => onNavigate(SCREENS.SETTINGS) },
     { label:'Log out', id: TARGETS.SIDEBAR_MENU_LOGOUT, danger:true, nextScreen: SCREENS.PARTICIPANT_SETUP,
       action: () => { if (window.confirm('Log out of this research session?')) onLogout && onLogout(); } },
   ];

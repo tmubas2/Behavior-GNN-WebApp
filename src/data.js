@@ -93,6 +93,7 @@ export const TARGETS = {
   SIDEBAR_MENU_SELECT_CHATS:  'TGT_SB_SELECT_CHATS',
   SIDEBAR_MENU_MARK_ALL_READ: 'TGT_SB_MARK_ALL_READ',
   SIDEBAR_MENU_APP_LOCK:      'TGT_SB_APP_LOCK',
+  SIDEBAR_MENU_SETTINGS:      'TGT_SB_SETTINGS',
   SIDEBAR_MENU_LOGOUT:        'TGT_SB_LOGOUT',
 
   ATTACH_MENU_DOC:     'TGT_ATTACH_DOC',
@@ -201,10 +202,37 @@ export const TASKS = [
     task_id: 'T01',
     task_name: 'Forward a Message',
     task_description: 'Forward the most recent message from Alice to Bob.',
+    // Runs once when the task starts. Whatever it returns is stored as this
+    // task's "target" (the specific thing the participant needs to do),
+    // computed fresh from current chat state so it stays correct even if
+    // messages/chats change between sessions.
+    setup: (chats) => {
+      const aliceChat = chats.find(c => c.contactId === 'C01');
+      const lastAliceMsg = aliceChat?.messages[aliceChat.messages.length - 1];
+      return { requiredMessageId: lastAliceMsg?.id || null };
+    },
+    // Runs on every state change while the task is active. Return true the
+    // moment the participant has actually accomplished the task.
+    checkCompletion: (taskTarget, taskState, chats) => {
+      const requiredMessageId = taskTarget.requiredMessageId;
+      return !!requiredMessageId && taskState.forwardedMessages.some(
+        (f) => f.to === 'C02' && f.msg?.id === requiredMessageId
+      );
+    },
   },
   {
     task_id: 'T02',
     task_name: 'Create a Group',
     task_description: 'Create a group chat between Alice, Carol, and Emma.',
+    setup: () => ({}),
+    checkCompletion: (taskTarget, taskState, chats) => {
+      const required = ['C01', 'C03', 'C05'];
+      return chats.some((c) => (
+        c.isGroup &&
+        Array.isArray(c.members) &&
+        c.members.length === required.length &&
+        required.every((id) => c.members.includes(id))
+      ));
+    },
   },
 ];
