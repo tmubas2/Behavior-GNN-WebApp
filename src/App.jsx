@@ -398,7 +398,13 @@ export default function App() {
                     onNavigate={handleNavigate}
                     onLog={logEvent}
                     notificationsEnabled={notificationsEnabled}
-                    onToggleNotifications={() => setNotificationsEnabled(v => !v)}
+                    onToggleNotifications={() => {
+                      setNotificationsEnabled(v => {
+                        const next = !v;
+                        updateTaskState('notificationToggles', { enabled: next });
+                        return next;
+                      });
+                    }}
                   />
                 ) : (
                   <EmptyState />

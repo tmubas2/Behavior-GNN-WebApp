@@ -309,4 +309,57 @@ export const TASKS = [
       );
     },
   },
+  {
+    task_id: 'T07',
+    task_name: 'Delete a Chat',
+    task_description: 'Delete your chat with Emma Davis.',
+    // Runs after T06, which also uses Emma's chat (sending a photo) — that's
+    // fine since T07 is the last task to touch this chat. Deliberately does
+    // NOT reuse a chat that a later task (T08) still needs.
+    setup: (chats) => {
+      const emmaChat = chats.find(c => c.contactId === 'C05');
+      return { chatId: emmaChat?.id || null };
+    },
+    // Deleting a chat removes it entirely from the chats array (see
+    // App.jsx's handleDeleteChat), so completion is just "it's gone."
+    checkCompletion: (taskTarget, taskState, chats) => {
+      const { chatId } = taskTarget;
+      return !!chatId && !chats.some(c => c.id === chatId);
+    },
+  },
+  {
+    task_id: 'T08',
+    task_name: 'Delete a Sent Message',
+    task_description: "Delete the message where you said 'Yes please!' to Bob.",
+    // Targets a message already in the fixture data (from:'me'), rather than
+    // requiring the participant to send something new first.
+    setup: (chats) => {
+      const bobChat = chats.find(c => c.contactId === 'C02');
+      const targetMsg = bobChat?.messages.find(m => m.from === 'me' && m.text.toLowerCase().includes('yes please'));
+      return { requiredMessageId: targetMsg?.id || null };
+    },
+    // Deleting a message only updates ChatView's local `messages` state and
+    // taskState (see handleDeleteMessage) — it does NOT sync back to the
+    // parent `chats` state the way starring does. So completion must be
+    // checked via taskState.deletedMessages, not via chats.
+    checkCompletion: (taskTarget, taskState) => {
+      const { requiredMessageId } = taskTarget;
+      return !!requiredMessageId && taskState.deletedMessages.some(
+        (d) => d.msg?.id === requiredMessageId
+      );
+    },
+  },
+  {
+    task_id: 'T09',
+    task_name: 'Turn Off Notifications',
+    task_description: 'Turn off notifications for the app in Settings.',
+    setup: () => ({}),
+    // Checks the most recent toggle rather than "was it ever turned off",
+    // so a later re-enable correctly reflects as incomplete rather than
+    // giving credit for a state that no longer holds.
+    checkCompletion: (taskTarget, taskState) => {
+      const toggles = taskState.notificationToggles || [];
+      return toggles.length > 0 && toggles[toggles.length - 1].enabled === false;
+    },
+  },
 ];
