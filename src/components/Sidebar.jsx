@@ -131,12 +131,12 @@ export default function Sidebar({
   currentScreen, activeChat, onSelectChat, onNavigate, onLog,
   searchQuery, setSearchQuery, chats, onLogout, onCreateGroup,
   favoriteContacts, isMobile = false, activeAdaptivePopupId,
+  readChats, setReadChats,
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuAnchorRef = useRef(null);
   const [menuPlacement, setMenuPlacement] = useState({ openUp: false, maxHeight: 400 });
   const [tab, setTab] = useState('all');
-  const [readChats, setReadChats] = useState(new Set());
   const [viewingArchived, setViewingArchived] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedChats, setSelectedChats] = useState(new Set());

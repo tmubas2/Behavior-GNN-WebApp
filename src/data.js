@@ -311,20 +311,17 @@ export const TASKS = [
   },
   {
     task_id: 'T07',
-    task_name: 'Mute a Chat',
-    task_description: "Bob has been sending a lot of messages lately. Open his contact info and mute notifications for this chat.",
-    // Reached via clicking the contact's name/avatar in the chat header
-    // (handleContactHeader in ChatView.jsx) — not the chat's "more options"
-    // menu, which has a known click-registration bug unrelated to this task.
-    setup: (chats) => {
-      const bobChat = chats.find(c => c.contactId === 'C02');
-      return { contactKey: bobChat?.contactId || null };
-    },
-    // mutedContacts is a Set at the App.jsx level, keyed by contact ID for
-    // one-on-one chats (see getChatFavKey / handleToggleMute).
-    checkCompletion: (taskTarget, taskState, chats, mutedContacts) => {
-      const { contactKey } = taskTarget;
-      return !!contactKey && mutedContacts.has(contactKey);
+    task_name: 'Mark All Chats as Read',
+    task_description: 'Open the menu and mark all your chats as read.',
+    // Uses the sidebar's ⋮ menu — a plain dropdown with no invisible
+    // backdrop overlapping it, unlike ChatView's popups (which have a known
+    // click-registration bug). Already proven reliable via T02 and T09.
+    setup: (chats) => ({ chatIds: chats.map(c => c.id) }),
+    // readChats is a Set lifted to App.jsx (see Sidebar.jsx's "Mark all as
+    // read" menu item, which calls setReadChats with every current chat id).
+    checkCompletion: (taskTarget, taskState, chats, mutedContacts, readChats) => {
+      const { chatIds } = taskTarget;
+      return chatIds.length > 0 && chatIds.every(id => readChats.has(id));
     },
   },
   {

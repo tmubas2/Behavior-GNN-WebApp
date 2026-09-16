@@ -41,6 +41,7 @@ export default function App() {
   const [blockedContacts, setBlockedContacts] = useState(new Set());
   const [favoriteContacts, setFavoriteContacts] = useState(new Set());
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [readChats, setReadChats] = useState(new Set());
 
   const logger = useLogger(participant);
   const {
@@ -90,13 +91,13 @@ export default function App() {
     if (taskPhase !== 'active' || !currentTask) return;
 
     const fulfilled = currentTask.checkCompletion
-      ? !!currentTask.checkCompletion(taskTargetRef.current, taskState, chats, mutedContacts)
+      ? !!currentTask.checkCompletion(taskTargetRef.current, taskState, chats, mutedContacts, readChats)
       : false;
 
     if (fulfilled) {
       handleTaskComplete(true);
     }
-  }, [taskPhase, currentTask, taskState, chats, mutedContacts]);
+  }, [taskPhase, currentTask, taskState, chats, mutedContacts, readChats]);
 
   const handleNextTask = () => {
     if (isLastTask) {
@@ -291,6 +292,8 @@ export default function App() {
     onCreateGroup: handleCreateGroup,
     favoriteContacts,
     activeAdaptivePopupId: adaptivePanelId,
+    readChats,
+    setReadChats,
   };
 
   const chatViewProps = {
