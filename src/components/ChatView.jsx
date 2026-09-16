@@ -36,7 +36,7 @@ export default function ChatView({
   const [msgMenuPos, setMsgMenuPos] = useState({ left: 0, top: 0, maxHeight: 220 });
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [moreMenuPlacement, setMoreMenuPlacement] = useState({ openUp: false, maxHeight: 500 });
+  const [moreMenuPlacement, setMoreMenuPlacement] = useState({ openUp: false, maxHeight: 500, right: 12, top: 60, bottom: null });
   const moreMenuAnchorRef = useRef(null);
   const [attachAccept, setAttachAccept] = useState('*/*');
   const [messages, setMessages] = useState(chat.messages);
@@ -360,7 +360,13 @@ export default function ChatView({
         const spaceBelow = window.innerHeight - rect.bottom - margin;
         const spaceAbove = rect.top - margin;
         const openUp = spaceBelow < 420 && spaceAbove > spaceBelow;
-        setMoreMenuPlacement({ openUp, maxHeight: Math.max(160, openUp ? spaceAbove : spaceBelow) });
+        setMoreMenuPlacement({
+          openUp,
+          maxHeight: Math.max(160, openUp ? spaceAbove : spaceBelow),
+          right: window.innerWidth - rect.right,
+          top: openUp ? null : rect.bottom + 4,
+          bottom: openUp ? (window.innerHeight - rect.top + 4) : null,
+        });
       }
     }
     setShowMoreMenu(v => !v);
@@ -404,10 +410,10 @@ export default function ChatView({
 
             {showMoreMenu && (
               <div style={{
-                position:'absolute', right:0,
-                ...(moreMenuPlacement.openUp ? { bottom:'100%', marginBottom:4 } : { top:'100%', marginTop:4 }),
+                position:'fixed', right: moreMenuPlacement.right,
+                ...(moreMenuPlacement.openUp ? { bottom: moreMenuPlacement.bottom } : { top: moreMenuPlacement.top }),
                 background:'#ffffff', borderRadius:8, boxShadow:'0 4px 18px rgba(0,0,0,0.18)', border:'1px solid #e9edef',
-                zIndex:70, minWidth:250, maxWidth:'calc(100vw - 32px)',
+                zIndex:500, minWidth:250, maxWidth:'calc(100vw - 32px)',
                 maxHeight: moreMenuPlacement.maxHeight, overflowY:'auto', padding:'6px 0',
               }}>
                 {moreMenuItems.map((item, i) => item.divider ? (
