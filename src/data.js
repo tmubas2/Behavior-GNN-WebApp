@@ -235,4 +235,43 @@ export const TASKS = [
       ));
     },
   },
+  {
+    task_id: 'T03',
+    task_name: 'Reply to a Message',
+    task_description: 'Bob mentioned a game last night. Reply to that message and let him know you saw it.',
+    // Finds the target message by matching its text rather than a hardcoded
+    // message ID, so this keeps working even if CHATS content changes later.
+    setup: (chats) => {
+      const bobChat = chats.find(c => c.contactId === 'C02');
+      const targetMsg = bobChat?.messages.find(m => m.text.toLowerCase().includes('game last night'));
+      return { requiredMessageId: targetMsg?.id || null, chatId: bobChat?.id || null };
+    },
+    // Completion only requires that the participant used the Reply feature
+    // on the correct message (structural correctness) — matching T01's
+    // approach, we don't grade the exact wording they typed.
+    checkCompletion: (taskTarget, taskState) => {
+      const { requiredMessageId, chatId } = taskTarget;
+      return !!requiredMessageId && taskState.sentMessages.some(
+        (s) => s.chatId === chatId && s.msg?.replyTo === requiredMessageId
+      );
+    },
+  },
+  {
+    task_id: 'T04',
+    task_name: 'Star an Important Message',
+    task_description: "Find the message where Carol invites you to dinner, and star it so you don't lose it.",
+    setup: (chats) => {
+      const carolChat = chats.find(c => c.contactId === 'C03');
+      const targetMsg = carolChat?.messages.find(m => m.text.toLowerCase().includes('dinner'));
+      return { requiredMessageId: targetMsg?.id || null };
+    },
+    // Starring updates the authoritative `chats` state directly (see
+    // App.jsx's handleStar), so we check live chats rather than taskState.
+    checkCompletion: (taskTarget, taskState, chats) => {
+      const { requiredMessageId } = taskTarget;
+      return !!requiredMessageId && chats.some(c =>
+        c.messages.some(m => m.id === requiredMessageId && m.starred)
+      );
+    },
+  },
 ];
