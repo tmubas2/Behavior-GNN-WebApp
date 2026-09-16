@@ -40,6 +40,7 @@ export default function App() {
   const [mutedContacts, setMutedContacts] = useState(new Set());
   const [blockedContacts, setBlockedContacts] = useState(new Set());
   const [favoriteContacts, setFavoriteContacts] = useState(new Set());
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const logger = useLogger(participant);
   const {
@@ -407,7 +408,12 @@ export default function App() {
                 ) : currentScreen === SCREENS.STARRED ? (
                   <StarredMessages allChats={chats} onNavigate={handleNavigate} onLog={logEvent} />
                 ) : currentScreen === SCREENS.SETTINGS ? (
-                  <Settings onNavigate={handleNavigate} onLog={logEvent} />
+                  <Settings
+                    onNavigate={handleNavigate}
+                    onLog={logEvent}
+                    notificationsEnabled={notificationsEnabled}
+                    onToggleNotifications={() => setNotificationsEnabled(v => !v)}
+                  />
                 ) : (
                   <EmptyState />
                 )}

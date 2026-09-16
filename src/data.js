@@ -41,6 +41,7 @@ export const TARGETS = {
   MSG_ITEM:            'TGT_MSG_ITEM',
   MSG_MORE_BTN:        'TGT_MSG_MORE_BTN',
   MSG_COPY:            'TGT_MSG_COPY',
+  MSG_DELETE:          'TGT_MSG_DELETE',
   REPLY_CANCEL:        'TGT_REPLY_CANCEL',
   SEND_BTN:            'TGT_SEND_BTN',
   ATTACH_BTN:          'TGT_ATTACH_BTN',

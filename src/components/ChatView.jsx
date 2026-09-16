@@ -168,6 +168,22 @@ export default function ChatView({
     setShowMsgMenu(null);
   };
 
+  const handleDeleteMessage = (msg) => {
+    logWithPopupContext({
+      screen_id:      SCREENS.MSG_ACTION_MENU,
+      action_type:    'tap',
+      target_id:      TARGETS.MSG_DELETE,
+      target_label:   'delete message',
+      next_screen_id: SCREENS.CHAT_VIEW,
+    });
+    setMessages(prev => prev.map(m => m.id === msg.id
+      ? { ...m, text: 'This message was deleted', deleted: true, starred: false, attachment: null }
+      : m
+    ));
+    updateTaskState && updateTaskState('deletedMessages', { msg });
+    setShowMsgMenu(null);
+  };
+
   const handleMsgClick = (msg) => {
     logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type: 'tap', target_id: `${TARGETS.MSG_ITEM}_${msg.id}`, target_label: msg.text.slice(0,30) });
     updateTaskState && updateTaskState('viewedMessages', msg.id);
@@ -419,7 +435,7 @@ export default function ChatView({
                 onMouseEnter={() => setHoveredMsg(msg.id)}
                 onMouseLeave={() => { setHoveredMsg(null); if (!menuOpen) setShowMsgMenu(null); }}>
 
-                {isHovered && (
+                {isHovered && !msg.deleted && (
                   <div style={{ display:'flex', alignItems:'center', gap:4, margin: isMe ? '0 8px 0 0' : '0 0 0 8px', order: isMe ? -1 : 1 }}>
                     <MsgActionBtn title="Reply" onClick={() => handleReply(msg, false)}>↩</MsgActionBtn>
                     <MsgActionBtn title="More" onClick={(e) => handleMsgMoreClick(msg, e.currentTarget)}>⋮</MsgActionBtn>
@@ -439,11 +455,18 @@ export default function ChatView({
                     padding:'8px 12px 6px', boxShadow:'0 1px 2px rgba(0,0,0,0.1)',
                     border: msg.starred ? '1px solid #f0b42999' : 'none',
                   }}>
-                    {msg.forwarded && <div style={{ color:'#667781', fontSize:11, marginBottom:3, display:'flex', alignItems:'center', gap:4 }}>↪ Forwarded</div>}
+                    {msg.forwarded && !msg.deleted && <div style={{ color:'#667781', fontSize:11, marginBottom:3, display:'flex', alignItems:'center', gap:4 }}>↪ Forwarded</div>}
                     {msg.attachment?.isImage && (
                       <img src={msg.attachment.url} alt={msg.attachment.name} style={{ maxWidth:260, maxHeight:260, borderRadius:8, display:'block', marginBottom:4, objectFit:'cover' }} />
                     )}
-                    <span style={{ color:'#111b21', fontSize:14, fontWeight:400, lineHeight:1.5, wordBreak:'break-word' }}>{msg.text}</span>
+                    <span style={{
+                      color: msg.deleted ? '#667781' : '#111b21',
+                      fontStyle: msg.deleted ? 'italic' : 'normal',
+                      fontSize:14, fontWeight:400, lineHeight:1.5, wordBreak:'break-word',
+                      display:'flex', alignItems:'center', gap:5,
+                    }}>
+                      {msg.deleted && '🚫'}{msg.text}
+                    </span>
                     <div style={{ display:'flex', justifyContent:'flex-end', alignItems:'center', gap:4, marginTop:2 }}>
                       {msg.starred && <span style={{ fontSize:10 }}>⭐</span>}
                       <span style={{ color:'#667781', fontSize:11 }}>{formatTime(msg.time)}</span>
@@ -463,9 +486,10 @@ export default function ChatView({
                       { label:'Forward', action:() => handleForwardInit(msg) },
                       { label: msg.starred ? 'Unstar' : 'Star message', action:() => handleStar(msg) },
                       { label:'Copy', action:() => handleCopyMessage(msg) },
+                      ...(isMe ? [{ label:'Delete', danger:true, action:() => handleDeleteMessage(msg) }] : []),
                     ].map(item => (
                       <div key={item.label} onClick={item.action}
-                        style={{ padding:'12px 16px', color:'#111b21', fontSize:14, cursor:'pointer' }}
+                        style={{ padding:'12px 16px', color: item.danger ? '#ea0038' : '#111b21', fontSize:14, cursor:'pointer' }}
                         onMouseEnter={e => e.target.style.background='#f5f6f6'}
                         onMouseLeave={e => e.target.style.background='transparent'}>
                         {item.label}

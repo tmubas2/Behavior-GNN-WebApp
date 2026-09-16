@@ -323,13 +323,33 @@ export function StarredMessages({ allChats, onNavigate, onLog }) {
   );
 }
 
-export function Settings({ onNavigate, onLog }) {
+export function Settings({ onNavigate, onLog, notificationsEnabled = true, onToggleNotifications }) {
   return (
     <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#f0f2f5', overflow:'hidden' }}>
       <Header title="Settings" onBack={() => onNavigate(SCREENS.CHAT_LIST)} onLog={onLog} currentScreen={SCREENS.SETTINGS} />
       <div style={{ flex:1, overflowY:'auto' }}>
         <div style={{ background:'#ffffff', margin:'8px 0', padding:'8px 0' }}>
-          {['Account', 'Privacy', 'Security', 'Notifications', 'Storage and data', 'App language', 'Help', 'About'].map(item => (
+          {['Account', 'Privacy', 'Security'].map(item => (
+            <div key={item} onClick={() => onLog({ screen_id:SCREENS.SETTINGS, action_type:'tap', target_id:`TGT_SETTING_${item.replace(/ /g,'_').toUpperCase()}`, target_label:item })}
+              style={{ padding:'14px 24px', color:'#111b21', fontSize:15, cursor:'pointer', borderBottom:'1px solid #f0f2f5' }}
+              onMouseEnter={e => e.currentTarget.style.background='#f5f6f6'}
+              onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+              {item}
+            </div>
+          ))}
+          <PanelToggleRow
+            icon={notificationsEnabled ? '🔔' : '🔕'}
+            label="Notifications"
+            value={notificationsEnabled}
+            onToggle={() => {
+              onLog({
+                screen_id: SCREENS.SETTINGS, action_type: 'toggle', target_id: 'TGT_SETTING_NOTIFICATIONS',
+                target_label: notificationsEnabled ? 'turn off notifications' : 'turn on notifications',
+              });
+              onToggleNotifications && onToggleNotifications();
+            }}
+          />
+          {['Storage and data', 'App language', 'Help', 'About'].map(item => (
             <div key={item} onClick={() => onLog({ screen_id:SCREENS.SETTINGS, action_type:'tap', target_id:`TGT_SETTING_${item.replace(/ /g,'_').toUpperCase()}`, target_label:item })}
               style={{ padding:'14px 24px', color:'#111b21', fontSize:15, cursor:'pointer', borderBottom:'1px solid #f0f2f5' }}
               onMouseEnter={e => e.currentTarget.style.background='#f5f6f6'}
