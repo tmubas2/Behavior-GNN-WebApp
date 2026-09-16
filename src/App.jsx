@@ -157,6 +157,11 @@ export default function App() {
     setChatSearchOpen(false);
     setHighlightMessageId(highlightMsgId);
     if (isNew) updateTaskState('newChatsStarted', chat.contactId || chat.id);
+    // A highlightMsgId is only ever passed when the chat was opened by
+    // tapping a global search result (see Sidebar.jsx) — this records that
+    // the participant actually used search to reach this specific message,
+    // rather than just happening to open the right chat some other way.
+    if (highlightMsgId) updateTaskState('searchesPerformed', { chatId: chat.id, messageId: highlightMsgId });
   }, [chats, updateTaskState]);
 
   const handleSend = useCallback(({ chatId, message }) => {

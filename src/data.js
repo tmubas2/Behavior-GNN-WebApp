@@ -274,4 +274,39 @@ export const TASKS = [
       );
     },
   },
+  {
+    task_id: 'T05',
+    task_name: 'Search for a Message',
+    task_description: "Use search to find the message that mentions a 'budget document', then open that chat.",
+    setup: (chats) => {
+      const aliceChat = chats.find(c => c.contactId === 'C01');
+      const targetMsg = aliceChat?.messages.find(m => m.text.toLowerCase().includes('budget document'));
+      return { requiredMessageId: targetMsg?.id || null };
+    },
+    // Only counts if the participant actually reached this message via the
+    // search screen (see App.jsx's handleSelectChat / searchesPerformed) —
+    // not just by opening Alice's chat some other way, since that would
+    // test recognition, not search usage.
+    checkCompletion: (taskTarget, taskState) => {
+      const { requiredMessageId } = taskTarget;
+      return !!requiredMessageId && taskState.searchesPerformed.some(
+        (s) => s.messageId === requiredMessageId
+      );
+    },
+  },
+  {
+    task_id: 'T06',
+    task_name: 'Send a Photo',
+    task_description: 'Send a photo to Emma using the attachment button.',
+    setup: (chats) => {
+      const emmaChat = chats.find(c => c.contactId === 'C05');
+      return { chatId: emmaChat?.id || null };
+    },
+    checkCompletion: (taskTarget, taskState) => {
+      const { chatId } = taskTarget;
+      return !!chatId && taskState.sentMessages.some(
+        (s) => s.chatId === chatId && s.msg?.attachment?.isImage
+      );
+    },
+  },
 ];

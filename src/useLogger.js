@@ -85,6 +85,7 @@ export function useLogger(participant) {
     forwardedMessages: [],
     newChatsStarted: [],
     searchesPerformed: [],
+    deletedMessages: [],
   });
 
   const updateTaskState = useCallback((key, value) => {
@@ -153,6 +154,7 @@ export function useLogger(participant) {
       forwardedMessages: [],
       newChatsStarted: [],
       searchesPerformed: [],
+      deletedMessages: [],
     });
     currentTrialRef.current = null;
     taskStartTimeRef.current = null;
@@ -240,6 +242,7 @@ export function useLogger(participant) {
       forwardedMessages: [],
       newChatsStarted: [],
       searchesPerformed: [],
+      deletedMessages: [],
     });
 
     logEvent({
