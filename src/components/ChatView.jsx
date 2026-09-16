@@ -257,7 +257,15 @@ export default function ChatView({
     logWithPopupContext({ screen_id: SCREENS.ATTACH_MENU, action_type: 'tap', target_id: targetId, target_label: label, next_screen_id: SCREENS.CHAT_VIEW });
     setAttachAccept(accept);
     setShowAttachMenu(false);
-    setTimeout(() => fileInputRef.current?.click(), 0);
+    // Set the accept attribute directly on the DOM node before clicking.
+    // React's setAttachAccept(accept) above won't be reflected in the DOM
+    // until after this function returns (React batches the re-render), so
+    // reading it via the ref right now guarantees the file dialog opens
+    // with the correct type filter instead of whatever was set previously.
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute('accept', accept);
+      fileInputRef.current.click();
+    }
   };
 
   const handleFileChosen = (e) => {
