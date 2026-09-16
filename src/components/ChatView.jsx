@@ -397,7 +397,7 @@ export default function ChatView({
         <div style={{ display:'flex', gap:4 }}>
           <IconBtn title="Video call"><svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></IconBtn>
           <IconBtn title="Search in chat" onClick={handleOpenChatSearch}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></IconBtn>
-          <div ref={moreMenuAnchorRef} style={{ position:'relative' }}>
+          <div ref={moreMenuAnchorRef} style={{ position:'relative', zIndex:200 }}>
             <IconBtn title="More options" onClick={toggleMoreMenu}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
             </IconBtn>
@@ -525,7 +525,7 @@ export default function ChatView({
 
       <input ref={fileInputRef} type="file" accept={attachAccept} style={{ display:'none' }} onChange={handleFileChosen} />
 
-      <div style={{ background:'#f0f2f5', padding:'8px 12px 10px', zIndex:10, position:'relative' }}>
+      <div style={{ background:'#f0f2f5', padding:'8px 12px 10px', zIndex:200, position:'relative' }}>
         {showAttachMenu && (
           <div style={{ position:'absolute', bottom:'100%', left:8, marginBottom:8, background:'#ffffff', borderRadius:12, boxShadow:'0 4px 18px rgba(0,0,0,0.18)', border:'1px solid #e9edef', zIndex:70, padding:'8px 6px', minWidth:230, maxWidth:'calc(100vw - 32px)', maxHeight:'60dvh', overflowY:'auto' }}>
             {attachOptions.map(item => (
