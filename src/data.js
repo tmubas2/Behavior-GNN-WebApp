@@ -311,20 +311,20 @@ export const TASKS = [
   },
   {
     task_id: 'T07',
-    task_name: 'Delete a Chat',
-    task_description: 'Delete your chat with Emma Davis.',
-    // Runs after T06, which also uses Emma's chat (sending a photo) — that's
-    // fine since T07 is the last task to touch this chat. Deliberately does
-    // NOT reuse a chat that a later task (T08) still needs.
+    task_name: 'Mute a Chat',
+    task_description: "Bob has been sending a lot of messages lately. Open his contact info and mute notifications for this chat.",
+    // Reached via clicking the contact's name/avatar in the chat header
+    // (handleContactHeader in ChatView.jsx) — not the chat's "more options"
+    // menu, which has a known click-registration bug unrelated to this task.
     setup: (chats) => {
-      const emmaChat = chats.find(c => c.contactId === 'C05');
-      return { chatId: emmaChat?.id || null };
+      const bobChat = chats.find(c => c.contactId === 'C02');
+      return { contactKey: bobChat?.contactId || null };
     },
-    // Deleting a chat removes it entirely from the chats array (see
-    // App.jsx's handleDeleteChat), so completion is just "it's gone."
-    checkCompletion: (taskTarget, taskState, chats) => {
-      const { chatId } = taskTarget;
-      return !!chatId && !chats.some(c => c.id === chatId);
+    // mutedContacts is a Set at the App.jsx level, keyed by contact ID for
+    // one-on-one chats (see getChatFavKey / handleToggleMute).
+    checkCompletion: (taskTarget, taskState, chats, mutedContacts) => {
+      const { contactKey } = taskTarget;
+      return !!contactKey && mutedContacts.has(contactKey);
     },
   },
   {

@@ -90,13 +90,13 @@ export default function App() {
     if (taskPhase !== 'active' || !currentTask) return;
 
     const fulfilled = currentTask.checkCompletion
-      ? !!currentTask.checkCompletion(taskTargetRef.current, taskState, chats)
+      ? !!currentTask.checkCompletion(taskTargetRef.current, taskState, chats, mutedContacts)
       : false;
 
     if (fulfilled) {
       handleTaskComplete(true);
     }
-  }, [taskPhase, currentTask, taskState, chats]);
+  }, [taskPhase, currentTask, taskState, chats, mutedContacts]);
 
   const handleNextTask = () => {
     if (isLastTask) {
