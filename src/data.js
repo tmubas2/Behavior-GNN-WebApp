@@ -9,6 +9,7 @@ export const SCREENS = {
   SEARCH:            'SCR_SEARCH',
   STARRED:           'SCR_STARRED',
   SETTINGS:          'SCR_SETTINGS',
+  STATUS:            'SCR_STATUS',
   TASK_COMPLETE:     'SCR_TASK_COMPLETE',
   SESSION_COMPLETE:  'SCR_SESSION_COMPLETE',
 
@@ -28,6 +29,11 @@ export const TARGETS = {
   NAV_MENU:            'TGT_NAV_MENU',
   NAV_STARRED:         'TGT_NAV_STARRED',
   NAV_SETTINGS:        'TGT_NAV_SETTINGS',
+  NAV_STATUS_ICON:     'TGT_NAV_STATUS_ICON',
+  STATUS_ADD_BTN:      'TGT_STATUS_ADD_BTN',
+  STATUS_TEXT_INPUT:   'TGT_STATUS_TEXT_INPUT',
+  STATUS_POST_BTN:     'TGT_STATUS_POST_BTN',
+  STATUS_CANCEL_BTN:   'TGT_STATUS_CANCEL_BTN',
 
   CHAT_ITEM:           'TGT_CHAT_ITEM',
   SEARCH_INPUT:        'TGT_SEARCH_INPUT',
@@ -357,6 +363,20 @@ export const TASKS = [
     checkCompletion: (taskTarget, taskState) => {
       const toggles = taskState.notificationToggles || [];
       return toggles.length > 0 && toggles[toggles.length - 1].enabled === false;
+    },
+  },
+  {
+    task_id: 'T10',
+    task_name: 'Post a Status Update',
+    task_description: 'Add a status update that says: Enjoying a sunny day!',
+    // The Status feature didn't exist before this task was added — built new,
+    // reachable via the desktop icon rail's Status button (now wired up) or,
+    // cross-platform, via the sidebar's ⋮ menu (proven reliable on both
+    // mobile and desktop, unlike ChatView's popups).
+    setup: () => ({}),
+    checkCompletion: (taskTarget, taskState) => {
+      const posted = taskState.postedStatuses || [];
+      return posted.length > 0;
     },
   },
 ];

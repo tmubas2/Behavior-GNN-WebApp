@@ -75,7 +75,11 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
           )}
         </button>
 
-        <button title="Status" onClick={() => setActive('status')} style={railBtnStyle('status')} {...hoverHandlers('status')}>
+        <button title="Status" onClick={() => {
+          setActive('status');
+          onLog({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_STATUS_ICON, target_label: 'status icon', next_screen_id: SCREENS.STATUS });
+          onNavigate(SCREENS.STATUS);
+        }} style={railBtnStyle('status')} {...hoverHandlers('status')}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
         </button>
 
@@ -289,6 +293,7 @@ export default function Sidebar({
     { label:'Mark all as read', id: TARGETS.SIDEBAR_MENU_MARK_ALL_READ, nextScreen: SCREENS.CHAT_LIST, action: () => setReadChats(new Set(liveChats.map(c => c.id))) },
     { label:'App lock', id: TARGETS.SIDEBAR_MENU_APP_LOCK, nextScreen: currentScreen, action: () => {} },
     { label:'Settings', id: TARGETS.SIDEBAR_MENU_SETTINGS, nextScreen: SCREENS.SETTINGS, action: () => onNavigate(SCREENS.SETTINGS) },
+    { label:'Status', id: TARGETS.NAV_STATUS_ICON, nextScreen: SCREENS.STATUS, action: () => onNavigate(SCREENS.STATUS) },
     { label:'Log out', id: TARGETS.SIDEBAR_MENU_LOGOUT, danger:true, nextScreen: SCREENS.PARTICIPANT_SETUP,
       action: () => { if (window.confirm('Log out of this research session?')) onLogout && onLogout(); } },
   ];

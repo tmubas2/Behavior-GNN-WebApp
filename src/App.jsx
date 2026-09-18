@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar';
 import ChatView from './components/ChatView';
 import TaskBar from './components/TaskBar';
 import { TaskBriefing, TaskComplete, SessionComplete } from './components/TaskScreens';
-import { ContactInfo, ChatSearchPanel, StarredMessages, Settings, EmptyState } from './components/SecondaryScreens';
+import { ContactInfo, ChatSearchPanel, StarredMessages, Settings, Status, EmptyState } from './components/SecondaryScreens';
 
 export default function App() {
 
@@ -274,6 +274,8 @@ export default function App() {
     ? 'starred'
     : currentScreen === SCREENS.SETTINGS
     ? 'settings'
+    : currentScreen === SCREENS.STATUS
+    ? 'status'
     : 'list';
 
   const sidebarProps = {
@@ -375,7 +377,21 @@ export default function App() {
               {mobilePane === 'list' && <Sidebar {...sidebarProps} isMobile />}
               {mobilePane === 'chat' && <ChatView {...chatViewProps} />}
               {mobilePane === 'starred' && <StarredMessages allChats={chats} onNavigate={handleNavigate} onLog={logEvent} />}
-              {mobilePane === 'settings' && <Settings onNavigate={handleNavigate} onLog={logEvent} />}
+              {mobilePane === 'settings' && (
+                <Settings
+                  onNavigate={handleNavigate}
+                  onLog={logEvent}
+                  notificationsEnabled={notificationsEnabled}
+                  onToggleNotifications={() => {
+                    setNotificationsEnabled(v => {
+                      const next = !v;
+                      updateTaskState('notificationToggles', { enabled: next });
+                      return next;
+                    });
+                  }}
+                />
+              )}
+              {mobilePane === 'status' && <Status onNavigate={handleNavigate} onLog={logEvent} updateTaskState={updateTaskState} />}
               {mobilePane === 'contact' && liveActiveChat && <ContactInfo {...contactInfoProps} />}
               {mobilePane === 'search' && liveActiveChat && (
                 <ChatSearchPanel
@@ -409,6 +425,8 @@ export default function App() {
                       });
                     }}
                   />
+                ) : currentScreen === SCREENS.STATUS ? (
+                  <Status onNavigate={handleNavigate} onLog={logEvent} updateTaskState={updateTaskState} />
                 ) : (
                   <EmptyState />
                 )}

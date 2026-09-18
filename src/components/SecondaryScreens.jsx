@@ -363,6 +363,97 @@ export function Settings({ onNavigate, onLog, notificationsEnabled = true, onTog
   );
 }
 
+export function Status({ onNavigate, onLog, updateTaskState }) {
+  const [view, setView] = useState('list'); // 'list' | 'compose'
+  const [myStatuses, setMyStatuses] = useState([]);
+  const [draft, setDraft] = useState('');
+
+  const openCompose = () => {
+    onLog({ screen_id: SCREENS.STATUS, action_type:'tap', target_id: TARGETS.STATUS_ADD_BTN, target_label:'add status update' });
+    setView('compose');
+  };
+
+  const cancelCompose = () => {
+    onLog({ screen_id: SCREENS.STATUS, action_type:'tap', target_id: TARGETS.STATUS_CANCEL_BTN, target_label:'cancel status' });
+    setDraft('');
+    setView('list');
+  };
+
+  const postStatus = () => {
+    if (!draft.trim()) return;
+    const entry = { id:`status_${Date.now()}`, text:draft.trim(), time:new Date().toISOString() };
+    onLog({ screen_id: SCREENS.STATUS, action_type:'tap', target_id: TARGETS.STATUS_POST_BTN, target_label:'post status' });
+    setMyStatuses(prev => [...prev, entry]);
+    updateTaskState && updateTaskState('postedStatuses', entry);
+    setDraft('');
+    setView('list');
+  };
+
+  if (view === 'compose') {
+    return (
+      <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#efeae2' }}>
+        <div style={{ background:'#f0f2f5', borderBottom:'1px solid #e9edef', padding:'0 16px', display:'flex', alignItems:'center', gap:12, minHeight:60, flexShrink:0 }}>
+          <button onClick={cancelCompose} style={{ background:'none', border:'none', color:'#00a884', cursor:'pointer', fontSize:22, padding:'4px 8px 4px 0', lineHeight:1 }}>←</button>
+          <span style={{ color:'#111b21', fontSize:16, fontWeight:500 }}>Add status update</span>
+        </div>
+        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+          <textarea
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            placeholder="Type a status update..."
+            autoFocus
+            style={{ width:'100%', maxWidth:400, minHeight:120, fontSize:20, color:'#111b21', background:'#ffffff', border:'1px solid #e9edef', borderRadius:8, padding:16, resize:'none', fontFamily:'inherit', boxSizing:'border-box' }}
+          />
+        </div>
+        <div style={{ padding:'12px 16px', display:'flex', justifyContent:'flex-end' }}>
+          <button onClick={postStatus} disabled={!draft.trim()}
+            style={{
+              background: draft.trim() ? '#00a884' : '#a8d5c9', color:'#ffffff', border:'none', borderRadius:'50%',
+              width:48, height:48, fontSize:20, cursor: draft.trim() ? 'pointer' : 'default',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>
+            ➤
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#f0f2f5', overflow:'hidden' }}>
+      <Header title="Status" onBack={() => onNavigate(SCREENS.CHAT_LIST)} onLog={onLog} currentScreen={SCREENS.STATUS} />
+      <div style={{ flex:1, overflowY:'auto' }}>
+        <div onClick={openCompose}
+          style={{ background:'#ffffff', margin:'8px 0', padding:'12px 16px', display:'flex', alignItems:'center', gap:16, cursor:'pointer' }}
+          onMouseEnter={e => e.currentTarget.style.background='#f5f6f6'}
+          onMouseLeave={e => e.currentTarget.style.background='#ffffff'}>
+          <div style={{ width:48, height:48, borderRadius:'50%', background:'#dfe5e7', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, color:'#54656f', flexShrink:0, position:'relative' }}>
+            👤
+            <span style={{ position:'absolute', bottom:-2, right:-2, background:'#00a884', color:'#ffffff', borderRadius:'50%', width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, border:'2px solid #ffffff' }}>+</span>
+          </div>
+          <div>
+            <div style={{ color:'#111b21', fontSize:15, fontWeight:500 }}>My status</div>
+            <div style={{ color:'#667781', fontSize:13 }}>
+              {myStatuses.length === 0 ? 'Tap to add status update' : `${myStatuses.length} update${myStatuses.length > 1 ? 's' : ''} · tap to add another`}
+            </div>
+          </div>
+        </div>
+
+        {myStatuses.length > 0 && (
+          <div style={{ padding:'8px 16px' }}>
+            <div style={{ color:'#667781', fontSize:13, fontWeight:500, marginBottom:8 }}>Recent updates</div>
+            {myStatuses.map(s => (
+              <div key={s.id} style={{ background:'#ffffff', borderRadius:8, padding:'10px 12px', marginBottom:8, color:'#111b21', fontSize:14 }}>
+                {s.text}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function EmptyState() {
   return (
     <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#f0f2f5' }}>
