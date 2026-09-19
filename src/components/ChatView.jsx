@@ -449,7 +449,7 @@ export default function ChatView({
                 onMouseEnter={() => setHoveredMsg(msg.id)}
                 onMouseLeave={() => { setHoveredMsg(null); if (!menuOpen) setShowMsgMenu(null); }}>
 
-                {isHovered && !msg.deleted && (
+                {!msg.deleted && (
                   <div style={{ display:'flex', alignItems:'center', gap:4, margin: isMe ? '0 8px 0 0' : '0 0 0 8px', order: isMe ? -1 : 1 }}>
                     <MsgActionBtn title="Reply" onClick={() => handleReply(msg, false)}>↩</MsgActionBtn>
                     <MsgActionBtn title="More" onClick={(e) => handleMsgMoreClick(msg, e.currentTarget)}>⋮</MsgActionBtn>

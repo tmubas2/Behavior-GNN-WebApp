@@ -2,7 +2,7 @@ const { google } = require('googleapis');
 
 const SHEET_SCHEMAS = {
   Participants: [
-    'participant_id', 'age', 'age_group', 'scc_status', 'scc_score',
+    'participant_id', 'age', 'age_group', 'gender', 'scc_status', 'scc_score',
     'digital_literacy_score', 'smartphone_experience', 'notes', 'session_timestamp',
   ],
   Task_Trials: [
