@@ -89,7 +89,7 @@ export default function TaskBar({ task, taskIndex, totalTasks, active = true, on
               fontFamily:'inherit',
             }}
           >
-            ✓ Done
+            ✓ Skip
           </button>
         </div>
 
