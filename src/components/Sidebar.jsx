@@ -135,7 +135,7 @@ export default function Sidebar({
   currentScreen, activeChat, onSelectChat, onNavigate, onLog,
   searchQuery, setSearchQuery, chats, onLogout, onCreateGroup,
   favoriteContacts, isMobile = false, activeAdaptivePopupId,
-  readChats, setReadChats,
+  readChats, setReadChats, updateTaskState,
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuAnchorRef = useRef(null);
@@ -290,7 +290,10 @@ export default function Sidebar({
     { label:'Archived', id: TARGETS.SIDEBAR_MENU_ARCHIVED, nextScreen: SCREENS.CHAT_LIST, action: () => setViewingArchived(true) },
     { label:'Starred messages', id: TARGETS.NAV_STARRED, nextScreen: SCREENS.STARRED, action: () => onNavigate(SCREENS.STARRED) },
     { label:'Select chats', id: TARGETS.SIDEBAR_MENU_SELECT_CHATS, nextScreen: SCREENS.CHAT_LIST, action: () => { setSelectMode(v => !v); setSelectedChats(new Set()); } },
-    { label:'Mark all as read', id: TARGETS.SIDEBAR_MENU_MARK_ALL_READ, nextScreen: SCREENS.CHAT_LIST, action: () => setReadChats(new Set(liveChats.map(c => c.id))) },
+    { label:'Mark all as read', id: TARGETS.SIDEBAR_MENU_MARK_ALL_READ, nextScreen: SCREENS.CHAT_LIST, action: () => {
+      setReadChats(new Set(liveChats.map(c => c.id)));
+      updateTaskState && updateTaskState('markAllReadClicks', { time: Date.now() });
+    } },
     { label:'App lock', id: TARGETS.SIDEBAR_MENU_APP_LOCK, nextScreen: currentScreen, action: () => {} },
     { label:'Settings', id: TARGETS.SIDEBAR_MENU_SETTINGS, nextScreen: SCREENS.SETTINGS, action: () => onNavigate(SCREENS.SETTINGS) },
     { label:'Status', id: TARGETS.NAV_STATUS_ICON, nextScreen: SCREENS.STATUS, action: () => onNavigate(SCREENS.STATUS) },

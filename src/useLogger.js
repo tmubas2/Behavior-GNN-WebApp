@@ -88,6 +88,7 @@ export function useLogger(participant) {
     deletedMessages: [],
     notificationToggles: [],
     postedStatuses: [],
+    markAllReadClicks: [],
   });
 
   const updateTaskState = useCallback((key, value) => {
@@ -159,6 +160,7 @@ export function useLogger(participant) {
       deletedMessages: [],
       notificationToggles: [],
       postedStatuses: [],
+      markAllReadClicks: [],
     });
     currentTrialRef.current = null;
     taskStartTimeRef.current = null;
@@ -249,6 +251,7 @@ export function useLogger(participant) {
       deletedMessages: [],
       notificationToggles: [],
       postedStatuses: [],
+      markAllReadClicks: [],
     });
 
     logEvent({
@@ -442,25 +445,40 @@ export function useLogger(participant) {
       })),
     };
 
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:4000';
-      const response = await fetch(`${apiUrl}/api/session`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Unknown server error');
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+    const maxAttempts = 4;
+    const delaysMs = [3000, 6000, 12000]; // wait between attempts 1→2, 2→3, 3→4
+    let lastErr = null;
 
-      sheetsStatusRef.current = 'success';
-      setSheetsStatus('success');
-      return { success: true, ...data };
-    } catch (err) {
-      sheetsStatusRef.current = 'error';
-      setSheetsStatus('error');
-      setSheetsError(err.message);
-      return { success: false, error: err.message };
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await fetch(`${apiUrl}/api/session`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unknown server error');
+
+        sheetsStatusRef.current = 'success';
+        setSheetsStatus('success');
+        return { success: true, ...data };
+      } catch (err) {
+        lastErr = err;
+        // Keep status as 'sending' (not 'error') while retries remain, so
+        // the participant just sees "Uploading..." rather than a scary
+        // failure on what's often just a cold-starting backend (e.g.
+        // Render's free tier waking up) or a flaky mobile connection.
+        if (attempt < maxAttempts) {
+          await new Promise(res => setTimeout(res, delaysMs[attempt - 1]));
+        }
+      }
     }
+
+    sheetsStatusRef.current = 'error';
+    setSheetsStatus('error');
+    setSheetsError(lastErr?.message || 'Unknown error');
+    return { success: false, error: lastErr?.message };
   }, [participant, taskTrials, interactionEvents]);
 
   const autoSendOnSessionEnd = useCallback(() => {

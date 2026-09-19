@@ -322,12 +322,18 @@ export const TASKS = [
     // Uses the sidebar's ⋮ menu — a plain dropdown with no invisible
     // backdrop overlapping it, unlike ChatView's popups (which have a known
     // click-registration bug). Already proven reliable via T02 and T09.
-    setup: (chats) => ({ chatIds: chats.map(c => c.id) }),
-    // readChats is a Set lifted to App.jsx (see Sidebar.jsx's "Mark all as
-    // read" menu item, which calls setReadChats with every current chat id).
-    checkCompletion: (taskTarget, taskState, chats, mutedContacts, readChats) => {
-      const { chatIds } = taskTarget;
-      return chatIds.length > 0 && chatIds.every(id => readChats.has(id));
+    setup: () => ({}),
+    // IMPORTANT: this checks whether the "Mark all as read" button was
+    // actually clicked (taskState.markAllReadClicks), NOT whether every
+    // chat currently happens to be in the readChats set. Simply opening a
+    // chat also marks it read as a side effect (see handleChatSelect), so
+    // by the time a participant reaches this task, every chat is usually
+    // already "read" from earlier tasks (T01/T03/T04/T05/T06 all require
+    // opening a chat) — checking readChats directly would auto-complete
+    // this task instantly, with zero action from the participant.
+    checkCompletion: (taskTarget, taskState) => {
+      const clicks = taskState.markAllReadClicks || [];
+      return clicks.length > 0;
     },
   },
   {

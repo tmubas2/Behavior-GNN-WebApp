@@ -296,6 +296,7 @@ export default function App() {
     activeAdaptivePopupId: adaptivePanelId,
     readChats,
     setReadChats,
+    updateTaskState,
   };
 
   const chatViewProps = {
