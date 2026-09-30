@@ -24,6 +24,7 @@ function freshChats() {
 export default function Calibration({ screenId }) {
   const [chats] = useState(freshChats);
   const [exported, setExported] = useState(false);
+  const barRef = React.useRef(null);
 
   const activeChat =
     screenId === 'SS2' ? chats.find(c => c.contactId === 'C02') // Bob
@@ -55,10 +56,17 @@ export default function Calibration({ screenId }) {
       };
     });
 
+    const barHeight = barRef.current ? Math.round(barRef.current.getBoundingClientRect().height) : 0;
+
     const payload = {
       screen: screenId,
       captured_at: new Date().toISOString(),
+      // barHeightPx: crop exactly this many CSS pixels off the TOP of a full-viewport
+      // screenshot to get just the app content — this is the only reliable way to align
+      // the screenshot with these rects, since a "capture node screenshot" of an inner
+      // element can silently scale width/height by different, inconsistent factors.
       viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio },
+      barHeightPx: barHeight,
       rects,
     };
 
@@ -85,7 +93,7 @@ export default function Calibration({ screenId }) {
           capturing a screenshot of just the viewport below it (or using DevTools'
           device-toolbar capture, which captures only the emulated viewport) excludes it
           automatically. */}
-      <div style={{ background:'#1f2937', color:'#fff', padding:'8px 16px', fontSize:13, display:'flex', alignItems:'center', gap:16, flexShrink:0 }}>
+      <div ref={barRef} style={{ background:'#1f2937', color:'#fff', padding:'8px 16px', fontSize:13, display:'flex', alignItems:'center', gap:16, flexShrink:0 }}>
         <strong>CALIBRATION MODE — {screenId}</strong>
         <span style={{ opacity:0.8 }}>Viewport: {window.innerWidth}×{window.innerHeight} · Resize the window/DevTools device toolbar to your target dimensions BEFORE capturing.</span>
         <button onClick={exportRects} style={{ marginLeft:'auto', background:'#00a884', border:'none', borderRadius:6, color:'#fff', padding:'6px 14px', cursor:'pointer', fontWeight:600 }}>
