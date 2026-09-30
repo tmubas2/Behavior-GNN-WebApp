@@ -451,7 +451,7 @@ export default function ChatView({
 
                 {!msg.deleted && (
                   <div style={{ display:'flex', alignItems:'center', gap:4, margin: isMe ? '0 8px 0 0' : '0 0 0 8px', order: isMe ? -1 : 1 }}>
-                    <MsgActionBtn title="Reply" onClick={() => handleReply(msg, false)}>↩</MsgActionBtn>
+                    <MsgActionBtn title="Reply" targetId={`${TARGETS.MSG_REPLY}_${msg.id}`} onClick={() => handleReply(msg, false)}>↩</MsgActionBtn>
                     <MsgActionBtn title="More" targetId={`${TARGETS.MSG_MORE_BTN}_${msg.id}`} onClick={(e) => handleMsgMoreClick(msg, e.currentTarget)}>⋮</MsgActionBtn>
                   </div>
                 )}
