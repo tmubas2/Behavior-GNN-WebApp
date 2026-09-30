@@ -99,14 +99,14 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.4-2.3.9a7.7 7.7 0 00-1.7-1l-.4-2.4H9l-.4 2.4a7.7 7.7 0 00-1.7 1l-2.3-.9-2 3.4L4.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.4 2.3-.9a7.7 7.7 0 001.7 1l.4 2.4h4.8l.4-2.4a7.7 7.7 0 001.7-1l2.3.9 2-3.4z"/></svg>
         </button>
 
-        <button title="Channels" onClick={() => setActive('channels')} style={railBtnStyle('channels')} {...hoverHandlers('channels')}>
+        <button title="Channels" data-target-id={TARGETS.NAV_CHANNELS} onClick={() => setActive('channels')} style={railBtnStyle('channels')} {...hoverHandlers('channels')}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round">
             <path d="M3 11v2a2 2 0 002 2h1l3 4V7L6 11H5a2 2 0 00-2 2z"/>
             <path d="M11 9l7-3v12l-7-3"/>
           </svg>
         </button>
 
-        <button title="Communities" onClick={() => setActive('communities')} style={railBtnStyle('communities')} {...hoverHandlers('communities')}>
+        <button title="Communities" data-target-id={TARGETS.NAV_COMMUNITIES} onClick={() => setActive('communities')} style={railBtnStyle('communities')} {...hoverHandlers('communities')}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <circle cx="9" cy="9" r="3.2"/>
             <circle cx="16" cy="10.5" r="2.4"/>
@@ -115,7 +115,7 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
           </svg>
         </button>
 
-        <button title="Meta AI" onClick={() => setActive('metaai')} style={railBtnStyle('metaai')} {...hoverHandlers('metaai')}>
+        <button title="Meta AI" data-target-id={TARGETS.NAV_META_AI} onClick={() => setActive('metaai')} style={railBtnStyle('metaai')} {...hoverHandlers('metaai')}>
           <div style={{
             width:26, height:26, borderRadius:'50%',
             background:'conic-gradient(from 180deg, #4f9dff, #b768ff, #ff6bd6, #4f9dff)',
@@ -127,7 +127,7 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
       </div>
 
       <div style={{ display:'flex', flexDirection:'column', gap:10, alignItems:'center' }}>
-        <button title="Multimedia" onClick={() => setActive('multimedia')} style={railBtnStyle('multimedia')} {...hoverHandlers('multimedia')}>
+        <button title="Multimedia" data-target-id={TARGETS.NAV_MULTIMEDIA} onClick={() => setActive('multimedia')} style={railBtnStyle('multimedia')} {...hoverHandlers('multimedia')}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="14" rx="2"/>
             <circle cx="8" cy="9" r="1.6" fill="currentColor" stroke="none"/>
@@ -135,10 +135,10 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
           </svg>
         </button>
 
-        <div style={{
+        <div data-target-id={TARGETS.NAV_PROFILE} onClick={() => onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: TARGETS.NAV_PROFILE, target_label:'profile avatar' })} style={{
           width:32, height:32, borderRadius:'50%', background:'#6B8CFF33', border:'2px solid #6B8CFF66',
           display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:600, color:'#3D5BDB',
-          marginTop:4,
+          marginTop:4, cursor:'pointer',
         }}>
           ME
         </div>
@@ -443,7 +443,7 @@ export default function Sidebar({
                 {t.label}
               </button>
             ))}
-            <button title="Add filter" style={{
+            <button title="Add filter" data-target-id={TARGETS.FILTER_ADD} onClick={() => onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: TARGETS.FILTER_ADD, target_label:'add filter' })} style={{
               width:28, height:28, borderRadius:'50%', border:'1px solid #d1d7db', background:'transparent',
               color:'#54656f', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
               flexShrink:0, marginLeft:2,

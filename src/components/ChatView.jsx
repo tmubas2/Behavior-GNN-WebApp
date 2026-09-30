@@ -401,8 +401,8 @@ export default function ChatView({
           </div>
         </div>
         <div style={{ display:'flex', gap:4 }}>
-          <IconBtn title="Video call"><svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></IconBtn>
-          <IconBtn title="Search in chat" onClick={handleOpenChatSearch}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></IconBtn>
+          <IconBtn title="Video call" targetId={TARGETS.VIDEO_CALL_BTN} onClick={() => logWithPopupContext({ screen_id: SCREENS.CHAT_VIEW, action_type:'tap', target_id: TARGETS.VIDEO_CALL_BTN, target_label:'video call' })}><svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></IconBtn>
+          <IconBtn title="Search in chat" targetId={TARGETS.CHAT_SEARCH_ICON} onClick={handleOpenChatSearch}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></IconBtn>
           <div ref={moreMenuAnchorRef} style={{ position:'relative', zIndex:200 }}>
             <IconBtn title="More options" onClick={toggleMoreMenu} targetId={TARGETS.CHAT_MORE_BTN}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
@@ -555,7 +555,7 @@ export default function ChatView({
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </IconBtn>
-          <IconBtn title="Emoji" onClick={() => { setShowAttachMenu(false); logWithPopupContext({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.EMOJI_BTN, target_label:'emoji' }); }}>
+          <IconBtn title="Emoji" targetId={TARGETS.EMOJI_BTN} onClick={() => { setShowAttachMenu(false); logWithPopupContext({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.EMOJI_BTN, target_label:'emoji' }); }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#54656f"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
           </IconBtn>
           <input
