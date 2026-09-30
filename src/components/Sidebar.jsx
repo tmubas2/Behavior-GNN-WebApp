@@ -75,7 +75,7 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
           )}
         </button>
 
-        <button title="Status" onClick={() => {
+        <button title="Status" data-target-id={TARGETS.NAV_STATUS_ICON} onClick={() => {
           setActive('status');
           onLog({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_STATUS_ICON, target_label: 'status icon', next_screen_id: SCREENS.STATUS });
           onNavigate(SCREENS.STATUS);
