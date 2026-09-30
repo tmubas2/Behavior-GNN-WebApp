@@ -390,8 +390,8 @@ export default function ChatView({
       <div style={{ position:'absolute', inset:0, opacity:0.06, backgroundImage:`url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23111b21' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`, zIndex:0 }} />
 
       <div style={{ background:'#f0f2f5', padding:'0 16px', display:'flex', alignItems:'center', gap:12, minHeight:60, zIndex:10, borderBottom:'1px solid #e9edef' }}>
-        <button onClick={handleBack} style={{ background:'none', border:'none', color:'#54656f', cursor:'pointer', fontSize:22, padding:'4px 8px 4px 0', lineHeight:1 }}>←</button>
-        <div onClick={handleContactHeader} style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer', flex:1 }}>
+        <button data-target-id={TARGETS.BACK_BUTTON} onClick={handleBack} style={{ background:'none', border:'none', color:'#54656f', cursor:'pointer', fontSize:22, padding:'4px 8px 4px 0', lineHeight:1 }}>←</button>
+        <div data-target-id={TARGETS.CONTACT_HEADER} onClick={handleContactHeader} style={{ display:'flex', alignItems:'center', gap:12, cursor:'pointer', flex:1 }}>
           <Avatar contact={contact} />
           <div>
             <div style={{ color:'#111b21', fontSize:15, fontWeight:400 }}>{contact.name}</div>
@@ -404,7 +404,7 @@ export default function ChatView({
           <IconBtn title="Video call"><svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></IconBtn>
           <IconBtn title="Search in chat" onClick={handleOpenChatSearch}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></IconBtn>
           <div ref={moreMenuAnchorRef} style={{ position:'relative', zIndex:200 }}>
-            <IconBtn title="More options" onClick={toggleMoreMenu}>
+            <IconBtn title="More options" onClick={toggleMoreMenu} targetId={TARGETS.CHAT_MORE_BTN}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
             </IconBtn>
 
@@ -452,11 +452,11 @@ export default function ChatView({
                 {!msg.deleted && (
                   <div style={{ display:'flex', alignItems:'center', gap:4, margin: isMe ? '0 8px 0 0' : '0 0 0 8px', order: isMe ? -1 : 1 }}>
                     <MsgActionBtn title="Reply" onClick={() => handleReply(msg, false)}>↩</MsgActionBtn>
-                    <MsgActionBtn title="More" onClick={(e) => handleMsgMoreClick(msg, e.currentTarget)}>⋮</MsgActionBtn>
+                    <MsgActionBtn title="More" targetId={`${TARGETS.MSG_MORE_BTN}_${msg.id}`} onClick={(e) => handleMsgMoreClick(msg, e.currentTarget)}>⋮</MsgActionBtn>
                   </div>
                 )}
 
-                <div onClick={() => handleMsgClick(msg)} style={{ maxWidth:'65%', cursor:'default' }}>
+                <div data-target-id={`${TARGETS.MSG_ITEM}_${msg.id}`} onClick={() => handleMsgClick(msg)} style={{ maxWidth:'65%', cursor:'default' }}>
                   {replyMsg && (
                     <div style={{ background: isMe ? '#c5f2bb' : '#ffffff', borderLeft:'4px solid #00a884', borderRadius:'4px 4px 0 0', padding:'6px 10px', fontSize:12, color:'#667781', marginBottom:0 }}>
                       <div style={{ color:'#00a884', fontWeight:600, marginBottom:2 }}>{replyMsg.from === 'me' ? 'You' : contact.name}</div>
@@ -548,7 +548,7 @@ export default function ChatView({
         )}
 
         <div style={{ display:'flex', alignItems:'center', gap:0, background:'#ffffff', borderRadius:24, padding:'4px 6px', boxShadow:'0 1px 3px rgba(11,20,26,0.10)' }}>
-          <IconBtn title="Attach" onClick={handleAttachClick}>
+          <IconBtn title="Attach" onClick={handleAttachClick} targetId={TARGETS.ATTACH_BTN}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2" strokeLinecap="round"
               style={{ transform: showAttachMenu ? 'rotate(45deg)' : 'none', transition:'transform 0.15s' }}>
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -560,6 +560,7 @@ export default function ChatView({
           </IconBtn>
           <input
             ref={inputRef}
+            data-target-id={TARGETS.MSG_INPUT}
             value={input}
             onChange={e => { setInput(e.target.value); logWithPopupContext({ screen_id:SCREENS.CHAT_VIEW, action_type:'text_input', target_id:TARGETS.MSG_INPUT, target_label:'message input' }); }}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
@@ -613,19 +614,19 @@ export default function ChatView({
   );
 }
 
-function IconBtn({ children, onClick, title }) {
+function IconBtn({ children, onClick, title, targetId }) {
   const [h, setH] = useState(false);
   return (
-    <button onClick={onClick} title={title} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+    <button onClick={onClick} title={title} data-target-id={targetId} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{ background: h ? '#e9edef' : 'none', border:'none', borderRadius:'50%', width:40, height:40, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
       {children}
     </button>
   );
 }
 
-function MsgActionBtn({ children, onClick, title }) {
+function MsgActionBtn({ children, onClick, title, targetId }) {
   return (
-    <button onClick={onClick} title={title}
+    <button onClick={onClick} title={title} data-target-id={targetId}
       style={{ background:'#ffffff', border:'1px solid #e9edef', borderRadius:'50%', width:30, height:30, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#54656f', fontSize:16, boxShadow:'0 2px 6px rgba(0,0,0,0.12)' }}>
       {children}
     </button>

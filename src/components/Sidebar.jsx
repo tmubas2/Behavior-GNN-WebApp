@@ -61,7 +61,7 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
       alignItems:'center', justifyContent:'space-between', padding:'16px 0', flexShrink:0, height:'100%',
     }}>
       <div style={{ display:'flex', flexDirection:'column', gap:6, alignItems:'center' }}>
-        <button title="Chats" onClick={() => { setActive('chats'); onNavigate(SCREENS.CHAT_LIST); }}
+        <button title="Chats" data-target-id="TGT_NAV_CHATS" onClick={() => { setActive('chats'); onNavigate(SCREENS.CHAT_LIST); }}
           style={railBtnStyle('chats')} {...hoverHandlers('chats')}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
           {unreadCount > 0 && (
@@ -81,6 +81,22 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
           onNavigate(SCREENS.STATUS);
         }} style={railBtnStyle('status')} {...hoverHandlers('status')}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+        </button>
+
+        <button title="Starred messages" data-target-id={TARGETS.NAV_STARRED} onClick={() => {
+          setActive('starred');
+          onLog({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_STARRED, target_label: 'starred icon', next_screen_id: SCREENS.STARRED });
+          onNavigate(SCREENS.STARRED);
+        }} style={railBtnStyle('starred')} {...hoverHandlers('starred')}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7z"/></svg>
+        </button>
+
+        <button title="Settings" data-target-id={TARGETS.NAV_SETTINGS} onClick={() => {
+          setActive('settings');
+          onLog({ screen_id: SCREENS.CHAT_LIST, action_type: 'tap', target_id: TARGETS.NAV_SETTINGS, target_label: 'settings icon', next_screen_id: SCREENS.SETTINGS });
+          onNavigate(SCREENS.SETTINGS);
+        }} style={railBtnStyle('settings')} {...hoverHandlers('settings')}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.4-2.3.9a7.7 7.7 0 00-1.7-1l-.4-2.4H9l-.4 2.4a7.7 7.7 0 00-1.7 1l-2.3-.9-2 3.4L4.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.4 2.3-.9a7.7 7.7 0 001.7 1l.4 2.4h4.8l.4-2.4a7.7 7.7 0 001.7-1l2.3.9 2-3.4z"/></svg>
         </button>
 
         <button title="Channels" onClick={() => setActive('channels')} style={railBtnStyle('channels')} {...hoverHandlers('channels')}>
@@ -288,7 +304,6 @@ export default function Sidebar({
         onNavigate(SCREENS.NEW_GROUP);
       } },
     { label:'Archived', id: TARGETS.SIDEBAR_MENU_ARCHIVED, nextScreen: SCREENS.CHAT_LIST, action: () => setViewingArchived(true) },
-    { label:'Starred messages', id: TARGETS.NAV_STARRED, nextScreen: SCREENS.STARRED, action: () => onNavigate(SCREENS.STARRED) },
     { label:'Select chats', id: TARGETS.SIDEBAR_MENU_SELECT_CHATS, nextScreen: SCREENS.CHAT_LIST, action: () => { setSelectMode(v => !v); setSelectedChats(new Set()); } },
     { label:'Mark all as read', id: TARGETS.SIDEBAR_MENU_MARK_ALL_READ, nextScreen: SCREENS.CHAT_LIST, action: () => {
       setReadChats(new Set(liveChats.map(c => c.id)));
@@ -342,11 +357,11 @@ export default function Sidebar({
             <>
               <span style={{ color:'#00a884', fontSize:22, fontWeight:600 }}>WhatsApp</span>
               <div style={{ display:'flex', gap:4 }}>
-                <IconBtn onClick={handleNewChatClick} title="New chat">
+                <IconBtn onClick={handleNewChatClick} title="New chat" targetId={TARGETS.NAV_NEW_CHAT}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h10v2H7zm0-3h10v2H7zm0 6h7v2H7z"/></svg>
                 </IconBtn>
                 <div ref={menuAnchorRef} style={{ position:'relative' }}>
-                  <IconBtn onClick={toggleSidebarMenu} title="Menu">
+                  <IconBtn onClick={toggleSidebarMenu} title="Menu" targetId={TARGETS.NAV_MENU}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                   </IconBtn>
                   {showMenu && (
@@ -386,7 +401,7 @@ export default function Sidebar({
 
         {!isArchived && !(isNewGroup && groupStep === 'details') && (
           <div style={{ padding:'8px 12px', background:'#ffffff', flexShrink:0 }}>
-            <div style={{ background:'#f0f2f5', borderRadius:8, display:'flex', alignItems:'center', gap:8, padding:'8px 12px' }}>
+            <div data-target-id={TARGETS.SEARCH_INPUT} style={{ background:'#f0f2f5', borderRadius:8, display:'flex', alignItems:'center', gap:8, padding:'8px 12px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input
                 value={searchQuery}
@@ -415,7 +430,10 @@ export default function Sidebar({
               { key:'favourites', label:'Favourites' },
               { key:'groups',     label:'Groups' },
             ].map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{
+              <button key={t.key} data-target-id={`${TARGETS.FILTER_TAB}_${t.key.toUpperCase()}`} onClick={() => {
+                onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: `${TARGETS.FILTER_TAB}_${t.key.toUpperCase()}`, target_label: `${t.label} filter tab` });
+                setTab(t.key);
+              }} style={{
                 padding:'6px 14px', borderRadius:20, cursor:'pointer', flexShrink:0,
                 background: tab === t.key ? '#00a884' : 'transparent',
                 border: tab === t.key ? 'none' : '1px solid #d1d7db',
@@ -592,7 +610,7 @@ export default function Sidebar({
               }
 
               return (
-                <div key={chat.id} onClick={() => handleChatSelect(chat, matchedMessageId)}
+                <div key={chat.id} data-target-id={`${TARGETS.CHAT_ITEM}_${chat.id}`} onClick={() => handleChatSelect(chat, matchedMessageId)}
                   style={{
                     display:'flex', alignItems:'center', gap:14, padding:'12px 16px',
                     cursor:'pointer', background: isSelected ? '#e7f8f3' : (isActive ? '#f0f2f5' : 'transparent'),
@@ -640,10 +658,10 @@ export default function Sidebar({
   );
 }
 
-function IconBtn({ children, onClick, title }) {
+function IconBtn({ children, onClick, title, targetId }) {
   const [hover, setHover] = useState(false);
   return (
-    <button onClick={onClick} title={title}
+    <button onClick={onClick} title={title} data-target-id={targetId}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
         background: hover ? '#f0f2f5' : 'none', border:'none', borderRadius:'50%',
