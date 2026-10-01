@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SCREENS, CHATS } from './data';
 import Sidebar from './components/Sidebar';
 import ChatView from './components/ChatView';
+import { useIsMobile } from './responsive';
 
 // Standalone calibration harness for the Session 1 probe study.
 // Not part of the normal participant flow — reached only via ?calibrate=SS1 (or SS2, SS3)
@@ -25,6 +26,7 @@ export default function Calibration({ screenId }) {
   const [chats] = useState(freshChats);
   const [exported, setExported] = useState(false);
   const barRef = React.useRef(null);
+  const isMobile = useIsMobile(); // same breakpoint (880px) as the real app
 
   const activeChat =
     screenId === 'SS2' ? chats.find(c => c.contactId === 'C02') // Bob
@@ -103,17 +105,23 @@ export default function Calibration({ screenId }) {
       </div>
 
       <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
-        <Sidebar
-          {...stubProps}
-          currentScreen={currentScreen}
-          activeChat={activeChat}
-          chats={chats}
-          searchQuery=""
-          favoriteContacts={new Set()}
-          activeAdaptivePopupId={null}
-          readChats={new Set()}
-          setReadChats={noop}
-        />
+        {/* On mobile, real WhatsApp shows one pane at a time — chat list OR
+            an open chat, never side by side — so calibration must match
+            that, not the desktop two-pane layout. */}
+        {(!isMobile || screenId === 'SS1') && (
+          <Sidebar
+            {...stubProps}
+            currentScreen={currentScreen}
+            activeChat={activeChat}
+            chats={chats}
+            searchQuery=""
+            favoriteContacts={new Set()}
+            activeAdaptivePopupId={null}
+            readChats={new Set()}
+            setReadChats={noop}
+            isMobile={isMobile}
+          />
+        )}
         {screenId !== 'SS1' && (
           <ChatView
             {...stubProps}
@@ -124,7 +132,7 @@ export default function Calibration({ screenId }) {
             activeAdaptivePopupId={null}
           />
         )}
-        {screenId === 'SS1' && <div style={{ flex:1, background:'#f0f2f5' }} />}
+        {screenId === 'SS1' && !isMobile && <div style={{ flex:1, background:'#f0f2f5' }} />}
       </div>
     </div>
   );
