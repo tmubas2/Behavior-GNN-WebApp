@@ -143,6 +143,7 @@ export const CONTACTS = [
   { id: 'C01', name: 'Alice Johnson',   avatar: 'AJ', color: '#6B8CFF', phone: '+1 312 555 0101' },
   { id: 'C02', name: 'Bob Martinez',    avatar: 'BM', color: '#FF8C69', phone: '+1 312 555 0102' },
   { id: 'C03', name: 'Carol Williams',  avatar: 'CW', color: '#69FFB8', phone: '+1 312 555 0103' },
+  { id: 'C04', name: 'Frank Thompson',  avatar: 'FT', color: '#FFA940', phone: '+1 312 555 0104' },
   { id: 'C05', name: 'Emma Davis',      avatar: 'ED', color: '#FF69E1', phone: '+1 312 555 0105' },
 ];
 

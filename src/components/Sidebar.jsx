@@ -653,10 +653,59 @@ export default function Sidebar({
             })}
           </div>
         )}
+
+        {isMobile && !isSearch && !isNewChat && !isArchived && !isNewGroup && (
+          <div style={{
+            display:'flex', borderTop:'1px solid #e9edef', background:'#ffffff', flexShrink:0,
+            paddingBottom:'env(safe-area-inset-bottom, 0px)',
+          }}>
+            <button title="Status" data-target-id={TARGETS.NAV_STATUS_ICON} onClick={() => {
+              onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: TARGETS.NAV_STATUS_ICON, target_label:'status icon', next_screen_id: SCREENS.STATUS });
+              onNavigate(SCREENS.STATUS);
+            }} style={mobileTabStyle}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+              <span style={mobileTabLabel}>Status</span>
+            </button>
+
+            <button title="Starred messages" data-target-id={TARGETS.NAV_STARRED} onClick={() => {
+              onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: TARGETS.NAV_STARRED, target_label:'starred icon', next_screen_id: SCREENS.STARRED });
+              onNavigate(SCREENS.STARRED);
+            }} style={mobileTabStyle}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7z"/></svg>
+              <span style={mobileTabLabel}>Starred</span>
+            </button>
+
+            <button title="Settings" data-target-id={TARGETS.NAV_SETTINGS} onClick={() => {
+              onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: TARGETS.NAV_SETTINGS, target_label:'settings icon', next_screen_id: SCREENS.SETTINGS });
+              onNavigate(SCREENS.SETTINGS);
+            }} style={mobileTabStyle}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.4-2.3.9a7.7 7.7 0 00-1.7-1l-.4-2.4H9l-.4 2.4a7.7 7.7 0 00-1.7 1l-2.3-.9-2 3.4L4.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.4 2.3-.9a7.7 7.7 0 001.7 1l.4 2.4h4.8l.4-2.4a7.7 7.7 0 001.7-1l2.3.9 2-3.4z"/></svg>
+              <span style={mobileTabLabel}>Settings</span>
+            </button>
+
+            <button title="Communities" data-target-id={TARGETS.NAV_COMMUNITIES} onClick={() => {
+              onLog({ screen_id: SCREENS.CHAT_LIST, action_type:'tap', target_id: TARGETS.NAV_COMMUNITIES, target_label:'communities icon' });
+            }} style={mobileTabStyle}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="9" cy="9" r="3.2"/>
+                <circle cx="16" cy="10.5" r="2.4"/>
+                <path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5" strokeLinecap="round"/>
+                <path d="M14.5 14.3c1.9.4 3.5 2 3.5 4.2" strokeLinecap="round"/>
+              </svg>
+              <span style={mobileTabLabel}>Communities</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+const mobileTabStyle = {
+  flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'8px 0 6px',
+  background:'none', border:'none', cursor:'pointer', color:'#54656f',
+};
+const mobileTabLabel = { fontSize:11 };
 
 function IconBtn({ children, onClick, title, targetId }) {
   const [hover, setHover] = useState(false);
