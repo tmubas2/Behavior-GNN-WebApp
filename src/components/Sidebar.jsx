@@ -575,7 +575,7 @@ export default function Sidebar({
         )}
 
         {!isNewChat && !isArchived && !isNewGroup && (
-          <div style={{ flex:1, overflowY:'auto' }}>
+          <div style={{ flex:1, overflowY:'auto', minHeight:0 }}>
             {filteredChats.length === 0 && (
               <div style={{ textAlign:'center', color:'#667781', fontSize:14, padding:'40px 20px' }}>
                 {isSearch ? (searchQuery ? 'No results found' : 'Search by name or keyword') :
