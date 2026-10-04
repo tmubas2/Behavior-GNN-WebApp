@@ -386,7 +386,7 @@ export default function ChatView({
   const replyRef = messages.find(m => m.id === replyTo?.id);
 
   return (
-    <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#efeae2', position:'relative', overflow:'hidden' }}>
+    <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#e4e9ef', position:'relative', overflow:'hidden' }}>
       <div style={{ position:'absolute', inset:0, opacity:0.06, backgroundImage:`url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23111b21' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`, zIndex:0 }} />
 
       <div style={{ background:'#f0f2f5', padding:'0 16px', display:'flex', alignItems:'center', gap:12, minHeight:60, zIndex:10, borderBottom:'1px solid #e9edef' }}>
@@ -458,13 +458,13 @@ export default function ChatView({
 
                 <div data-target-id={`${TARGETS.MSG_ITEM}_${msg.id}`} onClick={() => handleMsgClick(msg)} style={{ maxWidth:'65%', cursor:'default' }}>
                   {replyMsg && (
-                    <div style={{ background: isMe ? '#c5f2bb' : '#ffffff', borderLeft:'4px solid #00a884', borderRadius:'4px 4px 0 0', padding:'6px 10px', fontSize:12, color:'#667781', marginBottom:0 }}>
-                      <div style={{ color:'#00a884', fontWeight:600, marginBottom:2 }}>{replyMsg.from === 'me' ? 'You' : contact.name}</div>
+                    <div style={{ background: isMe ? '#bcd3ee' : '#ffffff', borderLeft:'4px solid #3a6ea5', borderRadius:'4px 4px 0 0', padding:'6px 10px', fontSize:12, color:'#667781', marginBottom:0 }}>
+                      <div style={{ color:'#3a6ea5', fontWeight:600, marginBottom:2 }}>{replyMsg.from === 'me' ? 'You' : contact.name}</div>
                       {replyMsg.text.slice(0,60)}{replyMsg.text.length > 60 ? '...' : ''}
                     </div>
                   )}
                   <div style={{
-                    background: isMe ? '#d9fdd3' : '#ffffff',
+                    background: isMe ? '#d6e4f5' : '#ffffff',
                     borderRadius: replyMsg ? (isMe ? '0 0 4px 12px' : '0 0 12px 4px') : (isMe ? '12px 4px 12px 12px' : '4px 12px 12px 12px'),
                     padding:'8px 12px 6px', boxShadow:'0 1px 2px rgba(0,0,0,0.1)',
                     border: msg.starred ? '1px solid #f0b42999' : 'none',
@@ -484,7 +484,7 @@ export default function ChatView({
                     <div style={{ display:'flex', justifyContent:'flex-end', alignItems:'center', gap:4, marginTop:2 }}>
                       {msg.starred && <span style={{ fontSize:10 }}>⭐</span>}
                       <span style={{ color:'#667781', fontSize:11 }}>{formatTime(msg.time)}</span>
-                      {isMe && <span style={{ color:'#53bdeb', fontSize:14, lineHeight:1 }}>✓✓</span>}
+                      {isMe && <span style={{ color:'#2f7fc1', fontSize:14, lineHeight:1 }}>✓✓</span>}
                     </div>
                   </div>
                 </div>
@@ -520,8 +520,8 @@ export default function ChatView({
 
       {replyTo && (
         <div style={{ background:'#f0f2f5', borderTop:'1px solid #e9edef', padding:'8px 16px', display:'flex', alignItems:'center', gap:12, zIndex:10 }}>
-          <div style={{ flex:1, borderLeft:'4px solid #00a884', paddingLeft:12 }}>
-            <div style={{ color:'#00a884', fontSize:12, fontWeight:600, marginBottom:2 }}>{replyTo.from === 'me' ? 'You' : contact.name}</div>
+          <div style={{ flex:1, borderLeft:'4px solid #3a6ea5', paddingLeft:12 }}>
+            <div style={{ color:'#3a6ea5', fontSize:12, fontWeight:600, marginBottom:2 }}>{replyTo.from === 'me' ? 'You' : contact.name}</div>
             <div style={{ color:'#667781', fontSize:13 }}>{replyTo.text.slice(0,60)}</div>
           </div>
           <button onClick={() => { setReplyTo(null); logWithPopupContext({ screen_id:SCREENS.CHAT_VIEW, action_type:'tap', target_id:TARGETS.REPLY_CANCEL, target_label:'cancel reply' }); }}
@@ -570,7 +570,7 @@ export default function ChatView({
           />
           <IconBtn title={input.trim() ? 'Send' : 'Voice message'} onClick={handleSend}>
             {input.trim() ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00a884"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#3a6ea5"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             ) : (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><path d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
             )}

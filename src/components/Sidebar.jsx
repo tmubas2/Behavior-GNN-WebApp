@@ -34,7 +34,7 @@ function HighlightedSnippet({ text, query, sender }) {
   return (
     <span>
       {sender && <span style={{ color:'#3b4a54' }}>{sender}: </span>}
-      {before}<span style={{ color:'#00a884', fontWeight:700 }}>{match}</span>{after}
+      {before}<span style={{ color:'#3a6ea5', fontWeight:700 }}>{match}</span>{after}
     </span>
   );
 }
@@ -44,8 +44,8 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
 
   const railBtnStyle = (key) => ({
     width:42, height:42, borderRadius:10, border:'none', cursor:'pointer',
-    background: active === key ? '#dff5ef' : 'transparent',
-    color: active === key ? '#00a884' : '#54656f',
+    background: active === key ? '#e6eef7' : 'transparent',
+    color: active === key ? '#3a6ea5' : '#54656f',
     display:'flex', alignItems:'center', justifyContent:'center',
     position:'relative', transition:'background 0.15s, color 0.15s',
   });
@@ -66,7 +66,7 @@ function IconRail({ currentScreen, onNavigate, onLog, unreadCount }) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
           {unreadCount > 0 && (
             <span style={{
-              position:'absolute', top:2, right:2, background:'#00a884', color:'#ffffff',
+              position:'absolute', top:2, right:2, background:'#3a6ea5', color:'#ffffff',
               fontSize:10, fontWeight:700, borderRadius:'50%', minWidth:16, height:16,
               display:'flex', alignItems:'center', justifyContent:'center', padding:'0 2px',
             }}>
@@ -349,13 +349,13 @@ export default function Sidebar({
                 <span style={{ color:'#111b21', fontSize:15, fontWeight:500 }}>{selectedChats.size} selected</span>
               </div>
               <button onClick={() => { setReadChats(prev => new Set([...prev, ...selectedChats])); setSelectMode(false); setSelectedChats(new Set()); }}
-                style={{ background:'none', border:'none', color:'#00a884', cursor:'pointer', fontSize:13, fontWeight:600 }}>
+                style={{ background:'none', border:'none', color:'#3a6ea5', cursor:'pointer', fontSize:13, fontWeight:600 }}>
                 Mark read
               </button>
             </div>
           ) : (
             <>
-              <span style={{ color:'#00a884', fontSize:22, fontWeight:600 }}>WhatsApp</span>
+              <span style={{ color:'#3a6ea5', fontSize:22, fontWeight:600 }}>Messaging App</span>
               <div style={{ display:'flex', gap:4 }}>
                 <IconBtn onClick={handleNewChatClick} title="New chat" targetId={TARGETS.NAV_NEW_CHAT}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="#54656f"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h10v2H7zm0-3h10v2H7zm0 6h7v2H7z"/></svg>
@@ -435,7 +435,7 @@ export default function Sidebar({
                 setTab(t.key);
               }} style={{
                 padding:'6px 14px', borderRadius:20, cursor:'pointer', flexShrink:0,
-                background: tab === t.key ? '#00a884' : 'transparent',
+                background: tab === t.key ? '#3a6ea5' : 'transparent',
                 border: tab === t.key ? 'none' : '1px solid #d1d7db',
                 color: tab === t.key ? '#ffffff' : '#54656f',
                 fontSize:13, fontWeight:600, letterSpacing:0.2,
@@ -455,7 +455,7 @@ export default function Sidebar({
 
         {isNewChat && (
           <div style={{ flex:1, overflowY:'auto' }}>
-            <div style={{ padding:'6px 16px 4px', color:'#00a884', fontSize:13, fontWeight:600 }}>CONTACTS ON WHATSAPP</div>
+            <div style={{ padding:'6px 16px 4px', color:'#3a6ea5', fontSize:13, fontWeight:600 }}>CONTACTS ON MESSAGING APP</div>
             {CONTACTS
               .filter(c => !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase()))
               .map(contact => (
@@ -491,7 +491,7 @@ export default function Sidebar({
               </div>
             )}
             <div style={{ flex:1, overflowY:'auto' }}>
-              <div style={{ padding:'6px 16px 4px', color:'#00a884', fontSize:13, fontWeight:600 }}>CONTACTS ON WHATSAPP</div>
+              <div style={{ padding:'6px 16px 4px', color:'#3a6ea5', fontSize:13, fontWeight:600 }}>CONTACTS ON MESSAGING APP</div>
               {CONTACTS
                 .filter(c => !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase()))
                 .map(contact => {
@@ -509,7 +509,7 @@ export default function Sidebar({
                       <div style={{
                         width:22, height:22, borderRadius:'50%', flexShrink:0,
                         border: checked ? 'none' : '2px solid #b3bbc0',
-                        background: checked ? '#00a884' : 'transparent',
+                        background: checked ? '#3a6ea5' : 'transparent',
                         display:'flex', alignItems:'center', justifyContent:'center', color:'#ffffff', fontSize:12,
                       }}>
                         {checked ? '✓' : ''}
@@ -520,7 +520,7 @@ export default function Sidebar({
             </div>
             {groupSelected.size > 0 && (
               <div style={{ padding:'12px 16px', borderTop:'1px solid #e9edef' }}>
-                <button onClick={handleGroupNext} style={{ width:'100%', padding:'12px 0', background:'#00a884', border:'none', borderRadius:8, color:'#ffffff', fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                <button onClick={handleGroupNext} style={{ width:'100%', padding:'12px 0', background:'#3a6ea5', border:'none', borderRadius:8, color:'#ffffff', fontSize:14, fontWeight:600, cursor:'pointer' }}>
                   Next ({groupSelected.size} selected) →
                 </button>
               </div>
@@ -558,7 +558,7 @@ export default function Sidebar({
               })}
             </div>
             <div style={{ padding:'12px 16px', borderTop:'1px solid #e9edef' }}>
-              <button onClick={handleCreateGroup} style={{ width:'100%', padding:'13px 0', background:'#00a884', border:'none', borderRadius:8, color:'#ffffff', fontSize:15, fontWeight:600, cursor:'pointer' }}>
+              <button onClick={handleCreateGroup} style={{ width:'100%', padding:'13px 0', background:'#3a6ea5', border:'none', borderRadius:8, color:'#ffffff', fontSize:15, fontWeight:600, cursor:'pointer' }}>
                 Create Group →
               </button>
             </div>
@@ -613,7 +613,7 @@ export default function Sidebar({
                 <div key={chat.id} data-target-id={`${TARGETS.CHAT_ITEM}_${chat.id}`} onClick={() => handleChatSelect(chat, matchedMessageId)}
                   style={{
                     display:'flex', alignItems:'center', gap:14, padding:'12px 16px',
-                    cursor:'pointer', background: isSelected ? '#e7f8f3' : (isActive ? '#f0f2f5' : 'transparent'),
+                    cursor:'pointer', background: isSelected ? '#e6eef7' : (isActive ? '#f0f2f5' : 'transparent'),
                     transition:'background 0.1s', borderBottom:'1px solid #f0f2f5',
                   }}
                   onMouseEnter={e => { if (!isActive && !isSelected) e.currentTarget.style.background='#f5f6f6'; }}
@@ -622,7 +622,7 @@ export default function Sidebar({
                     <div style={{
                       width:20, height:20, borderRadius:'50%', flexShrink:0,
                       border: isSelected ? 'none' : '2px solid #b3bbc0',
-                      background: isSelected ? '#00a884' : 'transparent',
+                      background: isSelected ? '#3a6ea5' : 'transparent',
                       display:'flex', alignItems:'center', justifyContent:'center', color:'#ffffff', fontSize:12,
                     }}>
                       {isSelected ? '✓' : ''}
@@ -635,7 +635,7 @@ export default function Sidebar({
                         {contact.name}
                         {isFav && !isSearch && <span style={{ fontSize:11 }}>❤️</span>}
                       </span>
-                      <span style={{ color: unread ? '#00a884' : '#667781', fontSize:12, flexShrink:0 }}>
+                      <span style={{ color: unread ? '#3a6ea5' : '#667781', fontSize:12, flexShrink:0 }}>
                         {last ? formatTime(last.time) : ''}
                       </span>
                     </div>
@@ -644,7 +644,7 @@ export default function Sidebar({
                         {bodyContent}
                       </div>
                       {unread && !selectMode && !isSearch && (
-                        <div style={{ width:9, height:9, borderRadius:'50%', background:'#00a884', flexShrink:0, marginLeft:8 }} />
+                        <div style={{ width:9, height:9, borderRadius:'50%', background:'#3a6ea5', flexShrink:0, marginLeft:8 }} />
                       )}
                     </div>
                   </div>

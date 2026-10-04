@@ -6,7 +6,7 @@ function Header({ title, onBack, onLog, currentScreen }) {
   return (
     <div style={{ background:'#f0f2f5', borderBottom:'1px solid #e9edef', padding:'0 16px', display:'flex', alignItems:'center', gap:12, minHeight:60, flexShrink:0 }}>
       <button onClick={() => { onLog({ screen_id:currentScreen, action_type:'back', target_id:TARGETS.BACK_BUTTON, target_label:'back', next_screen_id:SCREENS.CHAT_LIST }); onBack(); }}
-        style={{ background:'none', border:'none', color:'#00a884', cursor:'pointer', fontSize:22, padding:'4px 8px 4px 0', lineHeight:1 }}>←</button>
+        style={{ background:'none', border:'none', color:'#3a6ea5', cursor:'pointer', fontSize:22, padding:'4px 8px 4px 0', lineHeight:1 }}>←</button>
       <span style={{ color:'#111b21', fontSize:16, fontWeight:500 }}>{title}</span>
     </div>
   );
@@ -15,7 +15,7 @@ function Header({ title, onBack, onLog, currentScreen }) {
 function Switch({ checked, onChange }) {
   return (
     <div onClick={onChange} role="switch" aria-checked={checked} style={{
-      width:36, height:20, borderRadius:12, background: checked ? '#00a884' : '#d1d7db',
+      width:36, height:20, borderRadius:12, background: checked ? '#3a6ea5' : '#d1d7db',
       cursor:'pointer', position:'relative', transition:'background 0.15s', flexShrink:0,
     }}>
       <div style={{
@@ -99,7 +99,7 @@ export function ContactInfo({
 
         {isGroup && (
           <>
-            <div style={{ padding:'6px 24px 10px', color:'#00a884', fontSize:12, fontWeight:600, letterSpacing:0.4 }}>
+            <div style={{ padding:'6px 24px 10px', color:'#3a6ea5', fontSize:12, fontWeight:600, letterSpacing:0.4 }}>
               {contact.members.length} PARTICIPANT{contact.members.length === 1 ? '' : 'S'}
             </div>
             {contact.members.map(memberId => {
@@ -183,7 +183,7 @@ function HighlightedText({ text, query }) {
   const before = text.slice(0, idx);
   const match = text.slice(idx, idx + query.length);
   const after = text.slice(idx + query.length);
-  return <>{before}<span style={{ color:'#00a884', fontWeight:700 }}>{match}</span>{after}</>;
+  return <>{before}<span style={{ color:'#3a6ea5', fontWeight:700 }}>{match}</span>{after}</>;
 }
 
 function formatSearchDate(ts) {
@@ -245,7 +245,7 @@ export function ChatSearchPanel({ chat, onClose, onLog, onSelectMessage }) {
         </button>
         <div style={{
           flex:1, background:'#ffffff', borderRadius:24, display:'flex', alignItems:'center', gap:8, padding:'8px 14px',
-          border: query ? '1.5px solid #00a884' : '1px solid #d1d7db',
+          border: query ? '1.5px solid #3a6ea5' : '1px solid #d1d7db',
         }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#54656f" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input
@@ -281,7 +281,7 @@ export function ChatSearchPanel({ chat, onClose, onLog, onSelectMessage }) {
                 style={{ display:'flex', alignItems:'flex-start', gap:6, padding:'8px 20px', cursor:'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.background='#f5f6f6'}
                 onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                {msg.from === 'me' && <span style={{ color:'#53bdeb', fontSize:14, lineHeight:'21px', flexShrink:0 }}>✓✓</span>}
+                {msg.from === 'me' && <span style={{ color:'#2f7fc1', fontSize:14, lineHeight:'21px', flexShrink:0 }}>✓✓</span>}
                 <span style={{ color:'#111b21', fontSize:14, lineHeight:1.5, wordBreak:'break-word' }}>
                   <HighlightedText text={msg.text} query={query} />
                 </span>
@@ -314,7 +314,7 @@ export function StarredMessages({ allChats, onNavigate, onLog }) {
           </div>
         ) : starred.map(m => (
           <div key={m.id} style={{ background:'#ffffff', margin:'4px 12px', borderRadius:10, padding:'14px 16px', boxShadow:'0 1px 2px rgba(0,0,0,0.06)' }}>
-            <div style={{ color:'#00a884', fontSize:12, fontWeight:600, marginBottom:6 }}>{m.contactName}</div>
+            <div style={{ color:'#3a6ea5', fontSize:12, fontWeight:600, marginBottom:6 }}>{m.contactName}</div>
             <div style={{ color:'#111b21', fontSize:14 }}>{m.text}</div>
           </div>
         ))}
@@ -391,9 +391,9 @@ export function Status({ onNavigate, onLog, updateTaskState }) {
 
   if (view === 'compose') {
     return (
-      <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#efeae2' }}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#e4e9ef' }}>
         <div style={{ background:'#f0f2f5', borderBottom:'1px solid #e9edef', padding:'0 16px', display:'flex', alignItems:'center', gap:12, minHeight:60, flexShrink:0 }}>
-          <button onClick={cancelCompose} style={{ background:'none', border:'none', color:'#00a884', cursor:'pointer', fontSize:22, padding:'4px 8px 4px 0', lineHeight:1 }}>←</button>
+          <button onClick={cancelCompose} style={{ background:'none', border:'none', color:'#3a6ea5', cursor:'pointer', fontSize:22, padding:'4px 8px 4px 0', lineHeight:1 }}>←</button>
           <span style={{ color:'#111b21', fontSize:16, fontWeight:500 }}>Add status update</span>
         </div>
         <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
@@ -408,7 +408,7 @@ export function Status({ onNavigate, onLog, updateTaskState }) {
         <div style={{ padding:'12px 16px', display:'flex', justifyContent:'flex-end' }}>
           <button onClick={postStatus} disabled={!draft.trim()}
             style={{
-              background: draft.trim() ? '#00a884' : '#a8d5c9', color:'#ffffff', border:'none', borderRadius:'50%',
+              background: draft.trim() ? '#3a6ea5' : '#a9bfd8', color:'#ffffff', border:'none', borderRadius:'50%',
               width:48, height:48, fontSize:20, cursor: draft.trim() ? 'pointer' : 'default',
               display:'flex', alignItems:'center', justifyContent:'center',
             }}>
@@ -429,7 +429,7 @@ export function Status({ onNavigate, onLog, updateTaskState }) {
           onMouseLeave={e => e.currentTarget.style.background='#ffffff'}>
           <div style={{ width:48, height:48, borderRadius:'50%', background:'#dfe5e7', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, color:'#54656f', flexShrink:0, position:'relative' }}>
             👤
-            <span style={{ position:'absolute', bottom:-2, right:-2, background:'#00a884', color:'#ffffff', borderRadius:'50%', width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, border:'2px solid #ffffff' }}>+</span>
+            <span style={{ position:'absolute', bottom:-2, right:-2, background:'#3a6ea5', color:'#ffffff', borderRadius:'50%', width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, border:'2px solid #ffffff' }}>+</span>
           </div>
           <div>
             <div style={{ color:'#111b21', fontSize:15, fontWeight:500 }}>My status</div>
@@ -460,7 +460,7 @@ export function EmptyState() {
       <div style={{ opacity:0.5, marginBottom:24 }}>
         <svg width="120" height="120" viewBox="0 0 24 24" fill="#8ea1a8"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.557 4.126 1.532 5.86L.057 23.516a.75.75 0 00.927.927l5.656-1.475A11.943 11.943 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
       </div>
-      <div style={{ color:'#41525d', fontSize:22, fontWeight:300, marginBottom:8 }}>WhatsApp Web</div>
+      <div style={{ color:'#41525d', fontSize:22, fontWeight:300, marginBottom:8 }}>Messaging App</div>
       <div style={{ color:'#667781', fontSize:14, textAlign:'center', maxWidth:380, lineHeight:1.6 }}>
         Select a conversation from the left to start messaging
       </div>
